@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-theme.css">
+    <script src="../lib/avalon.js"></script>
+    <script src="../dist/avalon.valid-1.0.js"></script>
+
+    <style>
+        .has-error-s {
+            background-color: #cfcfcf;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-5">
+                <div class="panel" ms-controller="changePassword">
+                    <div class="panel-title" ms-attr-data="newPasswordEndMark">
+                        <h3>修改密码</h3> {{newPasswordEndMark}}
+                    </div>
+                    <div class="panel-body">
+                        <form>
+                            <div class="form-group" ms-val-class-error="has-error:model.password" ms-val-class-error-1="has-error-s:model.password">
+                                <label class="control-label">当前密码</label>
+                                <input class="form-control" type="password" ms-val-required="model.password" data-val-required-error="请输入原密码" ms-duplex="model.password"
+                                ms-val-minlength="model.password" data-val-minlength-error="请至少输入5个数值" data-val-minilength-length="6"></input>
+                                <span class="help-block" ms-val-display="model.password"></span>
+                            </div>
+                            <div class="form-group" ms-val-class-error="has-error:model.newPassword" ms-val-class-success="has-success:model.newPassword">
+                                <label class="control-label">新密码</label>
+                                <input class="form-control" type="password" ms-val-required="model.newPassword" ms-attr-data-val-required-error="请输入新密码{{newPasswordEndMark}}"
+                                , ms-attr-data-val-required-success="正确{{newPasswordEndMark}}" ms-duplex="model.newPassword"></input>
+                                <span class="help-block" ms-val-display-error="model.newPassword"></span>
+                                <span class="help-block" ms-val-display-success="model.newPassword"></span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">再一次新密码</label>
+                                <input class="form-control" type="password" ms-val-required="model.confirmPassword" data-val-required-error="请再一次输入新密码" ms-duplex="model.confirmPassword"></input>
+                                <span class="help-block" ms-val-display-success="model.confirmPassword"></span>
+                                <span class="help-block" ms-val-display-error="model.confirmPassword"></span>
+                                <span class="help-block" ms-val-display-validating="model.confirmPassword"></span>
+                            </div>
+                            <div class="form-actions">
+                                <input type="button" value="submit" ms-click="submit">
+                                <button ms-click="changeEndMark" type="button">改变新密码提示的结束符号</button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <script>
+                var vm1 = avalon.define({
+                $id: "changePassword",
+                model:{
+                    newPassword: "",
+                    password:"",
+                    confirmPassword:""
+                },
+                _vilid:{},
+                submit:function(){
+                    
+                },
+                newPasswordEndMark:"^_^",
+                changeEndMark:function(){
+                  vm1.newPasswordEndMark = (new Date()).getTime();
+                }
+                
+                
+            });
+            </script>
+        </div>
+
+        <div class="row">
+            <div class="col-md-5" ms-controller="numberTest">
+                <form action="#">
+                    <div class="form-group" ms-val-class-error="has-error:number" ms-val-class-error-1="has-error-s:number">
+                        <label class="control-label">数值</label>
+                        <input class="form-control" type="number" ms-val-required="number" data-val-required-error="请输入数值" ms-duplex-number="number"
+                        ms-val-range="number" data-val-range-error="数值必须在[min]和[max]之间" data-val-range-min="6" data-val-range-max="15"></input>
+                        <span class="help-block" ms-val-display="number"></span>
+                    </div>
+                    <div class="col-md-12">
+                        <input type="button" value="submit" ms-click="submit">
+                    </div>
+
+                </form>
+            </div>
+            <div class=col-md-5>
+            </div>
+
+            <script>
+                var numberTest = avalon.define({
+                $id: "numberTest",
+                number: 3,
+                submit:function(){
+                    console.log(typeof numberTest.number)
+                }
+            });
+            </script>
+        </div>
+
+
+    </div>
+
+</body>
+
+</html>

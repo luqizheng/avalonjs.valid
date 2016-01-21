@@ -1,0 +1,48 @@
+{
+  "name": "avalon.valid.js",
+  "version": "1.0.0",
+  "description": "another validation for avalonjs",
+  "main": "gulpfile.js",
+  "directories": {
+    "example": "example"
+  },
+  "dependencies": {
+    "gulp": "^3.9.0",
+    "gulp-concat": "2.5.2",
+    "gulp-cssmin": "0.1.7",
+    "gulp-rename": "^1.2.2",
+    "gulp-replace": "^0.5.4",
+    "gulp-uglify": "1.2.0",
+    "gulp-util": "^3.0.7",
+    "rimraf": "2.2.8"
+  },
+  "devDependencies": {
+    "gulp-file-insert": "^1.0.2",
+    "gulp-replace": "^0.5.4",
+    "gulp-typescript": "^2.10.0",
+    "gulp-uglify": "^1.2.0",
+    "uglify-save-license": "^0.4.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luqizheng/avalonjs.valid.git"
+  },
+  "keywords": [
+    "jquery",
+    "twitter",
+    "popup",
+    "@",
+    "#",
+    "hyphen",
+    "at"
+  ],
+  "author": "leo.lu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/luqizheng/avalonjs.valid/issues"
+  },
+  "homepage": "https://github.com/luqizheng/avalonjs.valid#readme"
+}
