@@ -5,77 +5,58 @@
 /// <reference path="const.js" />
 (function (avalon) {
 
-    
+    "use strict";
+
     /* const */
     /* validation */
     /* init */
     avalon.directive(const_type, {
         init: function (binding) {
             //console.log("init " + binding.expr);
-            var info = anaylz(binding);      
-            //这里只处理验证器就可以了            
-            if (isValidator(info.name)) {
-                initHandler.validator(binding, info);
-            } else {
-                var method = initHandler[info.name];
-
-                if (method)
-                    method(binding, info);
-                else {
-                    avalon.log("warning", info.name, "is not a validation")
-                }
+            //ms-val="prop"
+            //ms-val-display="prop"
+            //ms-val-class="class:prop"
+            var vObj = _ValidObjSet.getValidObj(binding);
+            if (binding.name == "ms-val") {
+                var validators = validatorFactory.create(binding.element);
+                vObj.validators = validators;
+                initHandler.validator(binding);
+                return;
             }
+            else if (binding.name.substr(0, "ms-val-class".length) == "ms-val-class") {
+                initHandler.class(binding);
+                vObj.classBindings.push(binding);
+            }
+            else if (binding.name.substr(0, "ms-val-display".length) == "ms-val-display") {
+                binding.oneTime = true;
+                vObj.displayBindings.push(binding);
+            }           
         },
         update: function (newValue, oldValue) {
             var isFirst = oldValue === undefined;//第一次绑定，不需要验证。
-            var binding = this;
-            var info = anaylz(binding);
-            if (isFirst) {              
-                //displayBinding  cssBindg 只运行一次，因此。。。
-                if (!isValidator(info.name)) {
-                    var vobj = getValidObj(this);
-                    /*if (info.name == "class")
-                        vobj.clzBinding.push(this);
-                    if (info.name == "display")
-                        vobj.displays.push(this)*/
-                    vobj[info.name + "Bindings"].push(this)
-                }
+            var binding = this;           
+            var vobj = _ValidObjSet.getValidObj(this);
+            if (isFirst) {
+                vobj.value = newValue;
                 return;
             }
-
-
-            console.log("call output " + info.name)
-            if (isValidator(info.name)) {
-                updateHandler.validator.call(this, newValue, info);
-            }
+            vobj.valid(newValue);            
         }
     })
 
 
     var initHandler = {
-        validator: function (binding, info) {
-            var vObjIns = getValidator(binding);
-            var elem = binding.element;
-            var vObjExtends = avalon[const_type][info.name]
-            if (!vObjExtends) {
-                avalon.log("warning", info.name + " validator can't be found in avalon[" + const_type + "]");
-            }
-            avalon.mix(vObjIns, vObjExtends());
-            setProperties(binding, vObjIns, binding.expr)
-
+        validator: function (binding) {
+            var elem=binding.element;
             avalon(elem).bind('blur', bCheck)
-
             binding.roolback = function () {
-                avalon(elem).unbind("click", bCheck)
+                avalon(elem).unbind("blur", bCheck)
             }
             function bCheck() {
-                updateHandler.validator.call(binding, this.value, info);
+                //updateHandler.validator.call(binding, this.value, info);
+                _ValidObjSet.getValidObj(binding).valid(this.value);
             }
-        },
-        display: function (binding, info) {
-            binding.oneTime = true;
-            //binding.priority-=500;
-        },
+        },      
         "class": function (binding, info) {
             //binding.type = "class"//强制改为class;            
             var ary = binding.expr.split(':');
@@ -83,41 +64,15 @@
                 avalon.log("error", binding.expr + " 必须是 className:bindgName")
                 throw new Exception(binding.expr + " 必须是 className:bindgName");
             }
-            //binding.name="ms-class"
-            //binding.param="";
-            //binding.type="class";
-            var newValue = ary[1]; //ary[1] + ":" + const_prop + "." + ary[0] + "." + info.param;
-            //console.log(newValue);
+            var newValue = ary[1]; //ary[1] + ":" + const_prop + "." + ary[0] + "." + info.param;            
             binding.expr = newValue;
             binding.clz = ary[0];
             binding.oneTime = true;
-            //binding.priority-=500;
         }
 
     }
 
-    var updateHandler = {
-        validator: function (newValue, info) {
-            var binding = this;
-            var vobj = getValidObj(binding);
-            var validator = vobj.validators[info.name];
-            if (validator.async) {
-                vobj.validating = true;
-            }
-            validator.func(newValue, function (isPass) {
-                validator.isPass = isPass;
-                vobj.validating = false;                
-                //var message = isPass ? "success" : "error";
-                //vobj[message] = validator[message].msg();
-                //console.log(vobj.success + "," + vobj.error)
-                vobj.invokeResult();
-            })
-        }
-    }
-
-    function isValidator(name) {
-        return name != "display" && name != "class";
-    } 
+     
 
     /* validators */
     /* message */

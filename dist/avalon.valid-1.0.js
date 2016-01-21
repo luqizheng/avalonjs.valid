@@ -8,15 +8,15 @@ https://github.com/luqizheng/avalon.valid.js
 /// <reference path="const.js" />
 (function (avalon) {
 
-    
+    "use strict";
+
     var const_type = "val";
 var const_prop = "$" + const_type //附件到vmodles的名字，不能是$，因为是附加属性
 
     /// <reference path="init.js" />
 var _defmsg = { val: function () { return ""; } };
 
-function Validator() {
-    this.success = _defmsg;
+function Validator() {    
     this.error = _defmsg;
     this.validating = false;
     this.async = false; //async validator, if you use ajax in the this.func, please set it to true.
@@ -24,15 +24,16 @@ function Validator() {
     this.isPass = true;
 }
 
-function ValidObj() {
+function ValidObj(name) {
     this.validating = false;//中间状态，验证ing，
-    //this.success = "";
-    //this.error = "";
-    this.validators = {};//保存一堆验证器，因此不需要监控 对象为 
+    this.success = "";
+    this.error = "";
+    this.validators = [];
     this.clear = function () {
         this.success = "";
         this.error = "";
     }
+
     this.isPass = function () {
         var r = true;
         var success = "";
@@ -45,9 +46,9 @@ function ValidObj() {
             else if (!error) {
                 error = validator.error.val(validator);
                 success = "";
-                r=false;
+                r = false;
                 return false;
-            }                         
+            }
         })
         return {
             success: success,
@@ -55,30 +56,70 @@ function ValidObj() {
             isPass: r
         };
     },
+
     this.classBindings = [];//bidng of class.
     this.displayBindings = [];//bind of display
     this.validatings = [];
+
+
+
+
     this.invokeResult = function () {
         //已经知道结果了。
         var self = this;
-        var vResult = self.isPass();
-        var isPass = vResult.isPass
-        console.log("isPass" + isPass)
-        var binding, info;
-        console.debug("classBindings:" + self.classBindings.length)
+        var isPass = self.error == "";        
+        var binding, info;        
         for (var i = 0; i < self.classBindings.length; i++) {
             binding = self.classBindings[i];
-            info = anaylz(binding);
-            var showOrNot = info.param == "success" ? isPass : !isPass;
+            var properName=binding.name.split('-').pop();         
+            var showOrNot = properName == "success" ? isPass : !isPass;
             avalon(binding.element).toggleClass(binding.clz, showOrNot)
         }       
         //output 信息        
         for (var i = 0; i < self.displayBindings.length; i++) {
             binding = self.displayBindings[i];
-            info = anaylz(binding);
-            var msg = info.param ? self[info.param] : (vResult.success || vResult.error)
+            var properName=binding.name.split('-').pop();            
+            var msg = properName!="display" ? self[properName] : (self.success || self.error)
             avalon.innerHTML(binding.element, msg);
         }
+    }
+
+    this.valid = function (newValue) {
+        var self = this;
+        self.validating = true;
+        var queue = [];
+        for(var key in self.validators)
+        {
+            queue.push(self.validators[key]);
+        }
+        self.error = "";
+        queue.push(function () {
+            self.invokeResult();
+        })
+
+        function a() {
+            var validator = queue.shift();
+            if (!avalon.isFunction(validator)) {
+                validator.func(newValue, function (isPass) {
+                    validator.isPass = isPass;
+                    if (isPass) {
+                        a(); //成功继续验证。
+                    }
+                    else {
+                        self.error = validator.error.val(validator);
+                        queue.pop()();
+                    }
+                })
+            }
+            else {                
+                validator(); //最后全部成功那么就输出成功的信息。
+            }
+        }
+        a();
+    }
+    this._name=name;
+    this.toString=function(){
+        return this._name;
     }
 
 }
@@ -87,173 +128,160 @@ function ValidObj() {
 
 
     /// <reference path="validation.js" />
-
-function getValidObj(binding) {
-    var vmodel = binding.vmodels[0],
-        ary = binding.expr.split(':'),
-        expr = ary[0],
-
-        result = null;
-
-    if (!vmodel[const_prop]) {
-        //console.log(const_prop + " is no exist, build it")
-        vmodel[const_prop] = {}
+var _ValidObjSet = {
+    getValidObj: function (binding) {
+        var vmodel = binding.vmodels[0],
+            ary = binding.expr.split(':'),            
+            propertyName = ary[ary.length>1?1:0],
+            result = null;
+        avalon.log("debug create validObj for ",propertyName)
+        if (!vmodel[const_prop]) {            
+            vmodel[const_prop] = {
+                valida:function(){
+                    
+                }
+            }
+        }
+        result = vmodel[const_prop][propertyName]
+        if (!result) {            
+            result = new ValidObj(propertyName);            
+            vmodel[const_prop][propertyName] = result;
+        }
+        return result;
     }
-
-
-    result = vmodel[const_prop][expr]
-    if (!result) {
-        //console.log(const_prop + "." + expr + ".is no exist, build it");
-        result = new ValidObj()
-        vmodel[const_prop][expr] = result;
-    }
-    return result;
-}
-
-function getValidator(binding) {
-    var validObj = getValidObj(binding);
-    var validName = getFullNameValidationType(binding)
-    var result = validObj.validators[validName];
-    if (!result) {
-        //console.log(const_prop + "." + binding.expr + ".validators.[" + validName + "] is no exist, build it");
-        result = new Validator();
-        validObj.validators[validName] = result;
-    }
-    return result;
-}
-function anaylz(binding) {
-    var aryParam = binding.param.split('-');
-    var param = (aryParam.length > 1) ? aryParam[1] : "";
-    return {
-        name: aryParam[0].toLowerCase(),
-        param: param
-    };
-}
-
-function getValidationType(binding) {
-    var aryParam = binding.param.split('-')
-    return aryParam[0].toLowerCase();
-}
-
-function getFullNameValidationType(binding) {
-    var aryParam = binding.param.split('-')
-    var validName = aryParam[0]
-    var lastParam = aryParam.pop();//返回最有一个参数，看看是不是数值。
-    var index = parseInt(lastParam);
-    if (index)
-        validName += index;
-    return validName;
-}
+ }
 
 
 var msgRegex = /\[([^\[\]]|\[([^\[\]])*\])*\]/gi;
 
-
-function setProperties(binding, validationObj) {
-
-    var ele = binding.element;
-    var type = binding.type,
-        dataAttrName = "data-" + type + "-" + binding.param + "-"
-
-    for (var i = 0; i < ele.attributes.length; i++) {
-        var attr = ele.attributes[i];
-        var reg = new RegExp(dataAttrName + ".*");
-        var matches = attr.name.match(reg);
-        if (matches != null) {
-            var pathes = attr.name.substr(dataAttrName.length).split('-');
-            if (pathes.length == 0)
+var validatorFactory = {
+    create: function (element) {
+        
+        var result = {};
+        for (var i = 0; i < element.attributes.length; i++) {
+            var attr = element.attributes[i];
+            if (!/^val-/gi.test(attr.name)) {
                 continue;
-            var lastProp = pathes.pop();
-
-            var curObj = validationObj;
-            while (pathes.length != 0) {
-                curObj = curObj[pathes.shift()];
             }
-            curObj[lastProp] = {
-                attr: attr,
-                val: function (validator) {
-                    var content = this.attr.value;
-                    if (validator) {
-                        var matches = content.match(msgRegex);
-                        avalon.each(matches, function (i, v) {
-                            var propName = v.substring(1, v.length - 1);
-                            content = content.replace(new RegExp("\\[" + propName + "\\]", "ig"), validator[propName].val());
-                        })
-                    }
-                    return content;
-                }
+            var aryNames = attr.name.substr(4).split('-');
+            var prop = aryNames.pop();
+            if (aryNames.length == 0)
+                continue;
+            var validatorName = aryNames.shift();
+            var validatorCreator = avalon[const_type][validatorName];
+            if (!validatorCreator) {
+                avalon.log("warn", "can't find", validatorName, " defined.")
+                continue;
             }
-            //ele.removeAttribute(attr);
+            
+            var validator = result[validatorName];
+            if(!validator) {            
+                validator=this._creatorValidator(validatorCreator, aryNames, prop, attr);
+                result[validatorName]=validator;
+            }
         }
-    }
+        
+        return result;
+    },
+    _creatorValidator: function (validatorCreator, pathes, propName, attr) {
+        var result = new Validator();
+        var setting = validatorCreator();
+        var val=attr.val;
+        avalon.mix(result, setting);
+        
+        var curObj = result;
+        while (pathes.length != 0) {
+            curObj = curObj[pathes.shift()];
+            if (curObj === undefined) {
+                avalon.log("warn", propName, "is not exist.")
+                return result;
+            }
+        }
+        if(propName=="error"){
+            curObj[propName]=this._createAttributeReader(attr)
+        }
+        else{
+            curObj[propName] = converTo(val,curObj[propName]);
+        }
+        avalon.log("debug",propName,"=",curObj[propName]);
+        return result;
+    },
+    _createAttributeReader: function (attr) {
+        return {
+            attr: attr,
+            val: function (validator) {
+                var content = this.attr.value;
+                if (validator) {
+                    var matches = content.match(msgRegex);
+                    avalon.each(matches, function (i, v) {
+                        var propName = v.substring(1, v.length - 1);
+                        content = content.replace(new RegExp("\\[" + propName + "\\]", "ig"), validator[propName].val());
+                    })
+                }
+                return content;
+            }
+        }
+    }   
+
 }
+
+ function converTo(strValue,targrValue){
+        var type=typeof targrValue
+         switch (type) {
+            case "number":
+                strValue = parseFloat(strValue);
+            case "booleam":
+                strValue = strValue.toCaseLower() == "true"
+        }
+        return strValue;
+    }
     avalon.directive(const_type, {
         init: function (binding) {
             //console.log("init " + binding.expr);
-            var info = anaylz(binding);      
-            //这里只处理验证器就可以了            
-            if (isValidator(info.name)) {
-                initHandler.validator(binding, info);
-            } else {
-                var method = initHandler[info.name];
-
-                if (method)
-                    method(binding, info);
-                else {
-                    avalon.log("warning", info.name, "is not a validation")
-                }
+            //ms-val="prop"
+            //ms-val-display="prop"
+            //ms-val-class="class:prop"
+            var vObj = _ValidObjSet.getValidObj(binding);
+            if (binding.name == "ms-val") {
+                var validators = validatorFactory.create(binding.element);
+                vObj.validators = validators;
+                initHandler.validator(binding);
+                return;
             }
+            else if (binding.name.substr(0, "ms-val-class".length) == "ms-val-class") {
+                initHandler.class(binding);
+                vObj.classBindings.push(binding);
+            }
+            else if (binding.name.substr(0, "ms-val-display".length) == "ms-val-display") {
+                binding.oneTime = true;
+                vObj.displayBindings.push(binding);
+            }           
         },
         update: function (newValue, oldValue) {
             var isFirst = oldValue === undefined;//第一次绑定，不需要验证。
-            var binding = this;
-            var info = anaylz(binding);
-            if (isFirst) {              
-                //displayBinding  cssBindg 只运行一次，因此。。。
-                if (!isValidator(info.name)) {
-                    var vobj = getValidObj(this);
-                    /*if (info.name == "class")
-                        vobj.clzBinding.push(this);
-                    if (info.name == "display")
-                        vobj.displays.push(this)*/
-                    vobj[info.name + "Bindings"].push(this)
-                }
+            var binding = this;           
+            var vobj = _ValidObjSet.getValidObj(this);
+            if (isFirst) {
+                vobj.value = newValue;
                 return;
             }
-
-
-            console.log("call output " + info.name)
-            if (isValidator(info.name)) {
-                updateHandler.validator.call(this, newValue, info);
-            }
+            vobj.valid(newValue);            
         }
     })
 
 
     var initHandler = {
-        validator: function (binding, info) {
-            var vObjIns = getValidator(binding);
-            var elem = binding.element;
-            var vObjExtends = avalon[const_type][info.name]
-            if (!vObjExtends) {
-                avalon.log("warning", info.name + " validator can't be found in avalon[" + const_type + "]");
-            }
-            avalon.mix(vObjIns, vObjExtends());
-            setProperties(binding, vObjIns, binding.expr)
-
+        validator: function (binding) {
+            var elem=binding.element;
             avalon(elem).bind('blur', bCheck)
-
             binding.roolback = function () {
-                avalon(elem).unbind("click", bCheck)
+                avalon(elem).unbind("blur", bCheck)
             }
             function bCheck() {
-                updateHandler.validator.call(binding, this.value, info);
+                //updateHandler.validator.call(binding, this.value, info);
+                _ValidObjSet.getValidObj(binding).valid(this.value);
             }
-        },
-        display: function (binding, info) {
-            binding.oneTime = true;
-            //binding.priority-=500;
-        },
+        },      
         "class": function (binding, info) {
             //binding.type = "class"//强制改为class;            
             var ary = binding.expr.split(':');
@@ -261,41 +289,15 @@ function setProperties(binding, validationObj) {
                 avalon.log("error", binding.expr + " 必须是 className:bindgName")
                 throw new Exception(binding.expr + " 必须是 className:bindgName");
             }
-            //binding.name="ms-class"
-            //binding.param="";
-            //binding.type="class";
-            var newValue = ary[1]; //ary[1] + ":" + const_prop + "." + ary[0] + "." + info.param;
-            //console.log(newValue);
+            var newValue = ary[1]; //ary[1] + ":" + const_prop + "." + ary[0] + "." + info.param;            
             binding.expr = newValue;
             binding.clz = ary[0];
             binding.oneTime = true;
-            //binding.priority-=500;
         }
 
     }
 
-    var updateHandler = {
-        validator: function (newValue, info) {
-            var binding = this;
-            var vobj = getValidObj(binding);
-            var validator = vobj.validators[info.name];
-            if (validator.async) {
-                vobj.validating = true;
-            }
-            validator.func(newValue, function (isPass) {
-                validator.isPass = isPass;
-                vobj.validating = false;                
-                //var message = isPass ? "success" : "error";
-                //vobj[message] = validator[message].msg();
-                //console.log(vobj.success + "," + vobj.error)
-                vobj.invokeResult();
-            })
-        }
-    }
-
-    function isValidator(name) {
-        return name != "display" && name != "class";
-    } 
+     
 
     avalon[const_type] = {
     required: function () {
@@ -305,7 +307,7 @@ function setProperties(binding, validationObj) {
             }
         }
     },
-    maxlength: function () {
+    maxlen: function () {
         return {
             length: 10,
             func: function (value, cb) {
@@ -314,7 +316,7 @@ function setProperties(binding, validationObj) {
             }
         }
     },
-    minlength: function () {
+    minlen: function () {
         return {
             length: 6,
             func: function (value, cb) {

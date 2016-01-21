@@ -1,8 +1,7 @@
 /// <reference path="init.js" />
 var _defmsg = { val: function () { return ""; } };
 
-function Validator() {
-    this.success = _defmsg;
+function Validator() {    
     this.error = _defmsg;
     this.validating = false;
     this.async = false; //async validator, if you use ajax in the this.func, please set it to true.
@@ -10,15 +9,16 @@ function Validator() {
     this.isPass = true;
 }
 
-function ValidObj() {
+function ValidObj(name) {
     this.validating = false;//中间状态，验证ing，
-    //this.success = "";
-    //this.error = "";
-    this.validators = {};//保存一堆验证器，因此不需要监控 对象为 
+    this.success = "";
+    this.error = "";
+    this.validators = [];
     this.clear = function () {
         this.success = "";
         this.error = "";
     }
+
     this.isPass = function () {
         var r = true;
         var success = "";
@@ -31,9 +31,9 @@ function ValidObj() {
             else if (!error) {
                 error = validator.error.val(validator);
                 success = "";
-                r=false;
+                r = false;
                 return false;
-            }                         
+            }
         })
         return {
             success: success,
@@ -41,30 +41,70 @@ function ValidObj() {
             isPass: r
         };
     },
+
     this.classBindings = [];//bidng of class.
     this.displayBindings = [];//bind of display
     this.validatings = [];
+
+
+
+
     this.invokeResult = function () {
         //已经知道结果了。
         var self = this;
-        var vResult = self.isPass();
-        var isPass = vResult.isPass
-        console.log("isPass" + isPass)
-        var binding, info;
-        console.debug("classBindings:" + self.classBindings.length)
+        var isPass = self.error == "";        
+        var binding, info;        
         for (var i = 0; i < self.classBindings.length; i++) {
             binding = self.classBindings[i];
-            info = anaylz(binding);
-            var showOrNot = info.param == "success" ? isPass : !isPass;
+            var properName=binding.name.split('-').pop();         
+            var showOrNot = properName == "success" ? isPass : !isPass;
             avalon(binding.element).toggleClass(binding.clz, showOrNot)
         }       
         //output 信息        
         for (var i = 0; i < self.displayBindings.length; i++) {
             binding = self.displayBindings[i];
-            info = anaylz(binding);
-            var msg = info.param ? self[info.param] : (vResult.success || vResult.error)
+            var properName=binding.name.split('-').pop();            
+            var msg = properName!="display" ? self[properName] : (self.success || self.error)
             avalon.innerHTML(binding.element, msg);
         }
+    }
+
+    this.valid = function (newValue) {
+        var self = this;
+        self.validating = true;
+        var queue = [];
+        for(var key in self.validators)
+        {
+            queue.push(self.validators[key]);
+        }
+        self.error = "";
+        queue.push(function () {
+            self.invokeResult();
+        })
+
+        function a() {
+            var validator = queue.shift();
+            if (!avalon.isFunction(validator)) {
+                validator.func(newValue, function (isPass) {
+                    validator.isPass = isPass;
+                    if (isPass) {
+                        a(); //成功继续验证。
+                    }
+                    else {
+                        self.error = validator.error.val(validator);
+                        queue.pop()();
+                    }
+                })
+            }
+            else {                
+                validator(); //最后全部成功那么就输出成功的信息。
+            }
+        }
+        a();
+    }
+    this._name=name;
+    this.toString=function(){
+        return this._name;
     }
 
 }

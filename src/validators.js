@@ -6,7 +6,7 @@ avalon[const_type] = {
             }
         }
     },
-    maxlength: function () {
+    maxlen: function () {
         return {
             length: 10,
             func: function (value, cb) {
@@ -15,7 +15,7 @@ avalon[const_type] = {
             }
         }
     },
-    minlength: function () {
+    minlen: function () {
         return {
             length: 6,
             func: function (value, cb) {
