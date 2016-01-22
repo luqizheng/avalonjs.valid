@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-theme.css">
+    <script src="../lib/avalon.js"></script>
+    <script src="../dist/avalon.valid-1.0.js"></script>
+
+    <style>
+        .has-error-s {
+            background-color: #cfcfcf;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            Array
+            <div>
+                <form action="#" ms-controller="listVM">
+                    <div class="form-group" ms-val-class-error="has-error:el" ms-repeat="values">
+                        <input type="text" ms-duplex="el" ms-val="el" val-required-error="Please input it" />
+                    </div>
+                    <div class="col-md-12">
+                        <input type="button" value="submit" ms-click="submit">
+
+                    </div>
+
+                </form>
+            </div>
+            <script>
+                var listVm=avalon.define({
+                    $id:"listVM",
+                    values:["1","2"],
+                    submit:function(){
+                         listVm.$val.valid(function(isPass){
+                                alert(isPass)
+                         });
+                    }
+                })
+            </script>
+        </div>
+    </div>
+
+</body>
+
+</html>
