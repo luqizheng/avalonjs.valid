@@ -11,6 +11,7 @@ function Validator() {
 function ValidObj(name) {
     this.validating = false;//中间状态，验证ing，    
     this.success = "正确";
+    this.$id="";
     this.error = "";
     this.validators = [];
     this.value = "";

@@ -30,6 +30,7 @@ function Validator() {
 function ValidObj(name) {
     this.validating = false;//中间状态，验证ing，    
     this.success = "正确";
+    this.$id="";
     this.error = "";
     this.validators = [];
     this.value = "";
@@ -147,24 +148,29 @@ var _ValidObjSet = {
                 valid: function (callback) {
                     var validResult = [];
                     var summary = true;
-                    for (var key in this) {
-
-                        if (key == "valid")
+                    for (var compId in this) {
+                        if (compId == "valid")
                             continue;
-                        validResult.push(key);
+                        for (var propertyName in this[compId])
+                            validResult.push(compId + "." + propertyName);
                     }
 
-                    while (validResult.length != 0) {
-                        var key = validResult.shift();
-                        this[key].valid(undefined, function (isPass) {
-                            avalon.log(this.name);
-                            summary = summary && isPass;
-                            avalon.Array.remove(validResult, this.name);
-                            if (validResult.length == 0) {
-                                callback(summary)
-                            }
-                        });
+                    for (var compId in this) {
+                        if (compId == "valid")
+                            continue;
+                        for (var propertyName in this[compId]) {
+
+                            this[compId][propertyName].valid(undefined, function (isPass) {
+                                summary = summary && isPass;
+                                avalon.log("valid all for " + this.$compId + "." + this.name)
+                                avalon.Array.remove(validResult, this.$compId + "." + this.name);
+                                if (validResult.length == 0) {
+                                    callback(summary)
+                                }
+                            })
+                        }
                     }
+
                 }
             }
         }
@@ -180,6 +186,7 @@ var _ValidObjSet = {
             result = new ValidObj(propertyName);
             result.binding = binding;
             result.comp = comp;
+            result.$compId = $id;
             comp[propertyName] = result;
             avalon.log("debug", "created validation obj in ." + const_prop + "." + $id + "." + propertyName);
         }
@@ -225,7 +232,7 @@ var validatorFactory = {
         var propName = pathes.length > 0 ? pathes[pathes.length - 1] : false; //获取最有一个属性值，如果是error，那么就是可变的属性值，需要用message匹配
         avalon.mix(result, setting);
 
-        if (propName) {            
+        if (propName) {
             setPropertyVal(result, pathes, attr.value)
         }
         return result;
