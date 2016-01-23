@@ -1,7 +1,16 @@
 /// <reference path='validator.js' />
 /// <reference path='const.js' />
 'use strict';
-function converTo(strValue, type) {
+function getAttrVal(attr) {
+    var result = {
+        attr: attr,
+        val: function () {
+            return this.attr.val;
+        }
+    }
+    return result;
+}
+function converTo(strValue, type, attr) {
     switch (type) {
         case 'number':
             strValue = parseFloat(strValue);
@@ -9,16 +18,14 @@ function converTo(strValue, type) {
         case 'booleam':
             strValue = strValue.toCaseLower() === 'true';
             break;
-        case 'function': //如果原来的property是function，那么就是改为方法 都attr，面对的场景是val-required-error 这类型标签
-            strValue = function () {
-                return this.attr.value;
-            };
+        case 'function': //如果原来的property是function，那么就是改为方法 都attr，面对的场景是val-required-error 这类型标签        
+            strValue = getAttrVal(attr);
             break;
     }
     return strValue;
 }
 
-function setPropertyVal(obj, pathes, val, type) {
+function setPropertyVal(obj, pathes, val, attr) {
     var property = pathes.pop();
     var curObj = obj, propName;
     while (pathes.length !== 0) {
@@ -29,10 +36,8 @@ function setPropertyVal(obj, pathes, val, type) {
             return false;
         }
     }
-    if (!type) { //如果没有设置 type值，那么类型就是他自己本身的类型
-        type = typeof curObj[property];
-    }
-    curObj[property] = converTo(val, type);
+    var type = typeof curObj[property];
+    curObj[property] = converTo(val, type, attr);
     //avalon.log('debug', property, '=', curObj[property]);
 }
 
@@ -57,7 +62,7 @@ var _ValidObjSet = {
                     _ValidObjSet._vObjLoop.call(this, function (compId, propertyName, vObj) {
                         vObj.valid(undefined, function (isPass) {
                             summary = summary && isPass;
-                            avalon.Array.remove(validResult, this.$compId + '.' + this._name);
+                            avalon.Array.remove(validResult, this.$compId + '.' + this._propertyName);
                             if (!validResult.length) {
                                 callback(summary);
                             }
@@ -67,7 +72,7 @@ var _ValidObjSet = {
                 enable: function (groupName, enabled) {
                     _ValidObjSet._vObjLoop.call(this, function (compId, propertyName, vObj) {
                         if (vObj.group == groupName) {
-                            vObj.enabled = enabled;                            
+                            vObj.enabled = enabled;
                         }
                     })
                 }
@@ -139,6 +144,10 @@ var validatorFactory = {
                 result[validatorName] = validator;
                 validator.vObj = vobj;
             }
+            else {
+                //validator.attrs[aryNames.pop()] = attr;
+                setPropertyVal(validator, aryNames, attr.value, attr);
+            }
             validator.init(binding, vobj);
         }
 
@@ -146,13 +155,11 @@ var validatorFactory = {
     },
     _creatorValidator: function (validatorCreator, pathes, attr) { //创建验证其的时候，可以附带一个属性值
         var result = new Validator();
-        result.attr = attr;
         var setting = validatorCreator();
         var propName = pathes.length > 0 ? pathes[pathes.length - 1] : false;//看看有没有属性值，如果有就要设置
         avalon.mix(result, setting);
-
         if (propName) {
-            setPropertyVal(result, pathes, attr.value);
+            setPropertyVal(result, pathes, attr.value, attr); //恶心的写法啊~~~
         }
         return result;
     }

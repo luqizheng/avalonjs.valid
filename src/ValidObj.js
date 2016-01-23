@@ -100,7 +100,7 @@ function ValidObj(name) {
                         _validQueue(); //成功继续验证。
                     }
                     else {
-                        var msg = validator.error(self);
+                        var msg = validator.error.val();
                         self.error = formatMessage(msg,validator,self);
                         queue.pop()();
                     }
@@ -115,10 +115,10 @@ function ValidObj(name) {
     };
 
     
-    this._name = name;
+    this._propertyName = name;
     this.name = name;
     this.toString = function () {
-        return this._name;
+        return this._propertyName;
     }
     this.isPass = function () { return !this.enabled || this.error === ''; };
     this.notifyValidators=[]; //如果值发生变动，那么需要通知的其他binding
@@ -141,7 +141,10 @@ function ValidObj(name) {
                 variableName = propName.split(".")[1];
                 useObj=vObj;
             }
-            content = content.replace(new RegExp('\\[' + propName + '\\]', 'ig'), useObj[variableName]);
+            var val=useObj[variableName];
+            if(val.val)
+                val=val.val();            
+            content = content.replace(new RegExp('\\[' + propName + '\\]', 'ig'), val);
         });
         return content;
     };

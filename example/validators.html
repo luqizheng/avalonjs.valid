@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap.css">
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-theme.css">
     <script src="../lib/avalon.js"></script>
@@ -19,24 +19,145 @@
 
 <body>
     <div class="container">
+        <!--------------- 整型 ----------------------->
         <div class="panel">
-            <div class="col-md-5">
-                <form action="" ms-controller="regex">
-                    <div class="form-group" ms-val-class-error="has-error:Name">
-                        <label class="form-label"></label>
-                        <input type="text" class="form-control" ms-duplex="Name" ms-val="Name" val-regex-pattern="\w{1,10}" val-regex-error="请输入1到10个字符串"
-                        val-success="验证正确" />
-                        <span class="help-block" ms-val-display="Name"></span>
-                    </div>
-                    <div>
-                        <button ms-click="submit">submit</button>
-                    </div>
-                </form>
+            <div class="panel-title">整型</div>
+            <div class="panel-body">
+                <div class="col-md-5">
+                    <form action="" ms-controller="int">
+
+                        <div class="form-group" ms-val-class-error="has-error:number1">
+                            <label class="form-label">ms-duplex同步</label>
+                            <input type="text" class="form-control" ms-duplex="number1" ms-val="number1" val-int="" val-int-error="请输入整形数值" val-success="验证正确"
+                            />
+                            <span class="help-block" ms-val-display="number1"></span>
+                        </div>
+
+                        <div class="form-group" ms-val-class-error="has-error:number2">
+                            <label class="form-label">ms-duplex-number</label>
+                            <input type="number" class="form-control" ms-duplex-number="number2" ms-val="number2" val-int="" val-int-error="请输入整形数值"
+                            val-success="验证正确" />
+                            <span class="help-block" ms-val-display="number2"></span>
+                        </div>
+                        <div>
+                            <button ms-click="submit">submit</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-5">
+                    <p>
+                        val-int="" 无参数。
+                        <br> val-int-error="请输入整形数值"
+                        <br> 使用 ms-duplex-number 和 ms-duplex 都可以执行。
+                    </p>
+                </div>
             </div>
         </div>
-    </div>
-    <script>
-        var vam=avalon.define({
+
+        <script>
+            var regex=avalon.define({
+            $id:"int",
+            number2:"",
+            number1:"",
+            submit:function(){
+                vam.$val.valid(function(isValid){
+                    alert("验证"+isValid);
+                });                
+            }
+        });
+        </script>
+        <!--------------- end 整型 ----------------------->
+        <div class="panel">
+            <div class="panel-title">数值范围</div>
+            <div class="panel-body">
+                <div class="col-md-5">
+                    <form action="" ms-controller="range">
+                        <div class="form-group" ms-val-class-error="has-error:intNumber">
+                            <label class="form-label">浮点： ms-duplex同步</label>
+                            <input type="text" class="form-control" ms-duplex="intNumber" ms-val="intNumber" val-range-min="1.4" val-range-max="2.0"
+                            val-success="验证正确" />
+                            <span class="help-block" ms-val-display="intNumber"></span>
+                        </div>
+                        <div class="form-group" ms-val-class-error="has-error:floatNumber">
+                            <label class="form-label">整型范围</label>
+                            <div class="row">
+                                <div class="col-md-5">
+                                    min:
+                                    <input type="number" ms-duplex-number="intRange.min" val-int=""/>
+                                </div>
+                                <div class="col-md-5">
+                                    max:
+                                    <input type="number" ms-duplex-number="intRange.max" val-int=""/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group" ms-val-class-error="has-error:floatNumber">
+                            <label class="form-label">整型：ms-duplex</label>
+                            <input type="number" class="form-control" ms-val="floatNumber" ms-attr-val-range-min="intRange.min" ms-attr-val-range-max="intRange.max"
+                            val-success="验证正确" />
+                            <span class="help-block" ms-val-display="floatNumber"></span>
+                        </div>
+                        <div>
+                            <button ms-click="submit">submit</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-5">
+                    <p>
+                        val-int="" 无参数。
+                        <br> val-int-error="请输入整形数值"，报错说明
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            var regex=avalon.define({
+            $id:"range",
+            "intNumber":1,
+            "floatNumber":0.5,
+            intRange:{
+                min:1,
+                max:100
+            },           
+            submit:function(){
+                vam.$val.valid(function(isValid){
+                    alert("验证"+isValid);
+                });                
+            }
+        });
+        </script>
+
+
+
+        <!----------- Regex ----------------------->
+        <div class="panel">
+            <div class="panel-title">正则表达式</div>
+            <div class="panel-body">
+                <div class="col-md-5">
+                    <form action="" ms-controller="regex">
+                        <div class="form-group" ms-val-class-error="has-error:Name">
+                            <label class="form-label"></label>
+                            <input type="text" class="form-control" ms-duplex="Name" ms-val="Name" val-regex-pattern="\w{1,10}" val-regex-error="请输入1到10个字符串"
+                            val-success="验证正确" />
+                            <span class="help-block" ms-val-display="Name"></span>
+                        </div>
+                        <div>
+                            <button ms-click="submit">submit</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-5">
+                    <p>
+                        val-regex-pattern="\w{1,10}"
+                        <br> val-regex-error="请输入1到10个字符串"
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            var regex=avalon.define({
             $id:"regex",
             Name:"test",
             submit:function(){
@@ -45,7 +166,9 @@
                 });                
             }
         });
-    </script>
+        </script>
+        <!---------------------------- regex end------------------------>
+    </div>
 </body>
 
 </html>

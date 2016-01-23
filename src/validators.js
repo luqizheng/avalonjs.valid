@@ -1,4 +1,4 @@
-'use strict'; 
+'use strict';
 avalon[const_type] = {
     required: function () {
         return {
@@ -36,11 +36,14 @@ avalon[const_type] = {
     },
     range: function () {
         return {
-            min: 1,
-            max: 200,
+            min: avalon.noop,
+            max: avalon.noop,
             func: function (val, cb) {
                 var max = parseFloat(this.max.val());
                 var min = parseFloat(this.min.val());
+                if (min === NaN || max === NaN) {
+                    avalon.log("error", "Please defined val-range-min/max attr for " + this.vObj._name);
+                }
                 var p = parseFloat(val);
                 var result = (p >= min && p <= max);
                 cb(result);
@@ -57,9 +60,10 @@ avalon[const_type] = {
                 var data = this.vObj.comp[this.compare].getValue();
                 cb(data == val);
             },
-            error: function (vObj) {
-                var self = vObj.desc || vObj.name, compareTarget = this.vObj.comp[this.compare],
-                    compareText = compareTarget.name || compareTarget._name;
+            error: function (vObj,attr) {
+                var self = vObj.name || vObj._propertyName,
+                    compareTarget = this.vObj.comp[this.compare],
+                    compareText = compareTarget.name || compareTarget._propertyName;
                 return self + '与' + compareText + '不一致';
             },
             init: function (binding, vobj) {
@@ -71,13 +75,24 @@ avalon[const_type] = {
     regex: function () {
         return {
             pattern: '',
-            func: function (val, cb) {
+            func: function (value, cb) {
                 var reg = new RegExp(this.pattern);
-                cb(reg.test(val));
+                cb(reg.test(value));
             },
-            error: function (vObj) {
-                return (vObj.name || vObj._name) + '不正确';
+            error: function (vObj, attr) {
+                return '[vObj.name]不正确';
             }
         };
-    }  
+    },
+    int: function () {
+        return {
+            func: function (value, cb) {
+                cb(/^\-?\d+$/.test(value));
+            },
+            error: function (vObj) {
+                return '请输入整数';
+            }
+        }
+    }
+
 };

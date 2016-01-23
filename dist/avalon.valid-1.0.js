@@ -22,10 +22,11 @@ var const_prop = '$val';
       
     
 function Validator() {
-    this.error = function () { return '输入错误情纠正'; };
+    this.error = function (attr) { return '输入错误情纠正'; };
     this.async = false; //async validator, if you use ajax in the this.func, please set it to true.
     this.func = false;//function (value,callback) {}
     this.init = avalon.noop;
+    this.attrs={};//属性访问其，默认情况是 {properyName,attr对象}
 }
 
     
@@ -131,7 +132,7 @@ function ValidObj(name) {
                         _validQueue(); //成功继续验证。
                     }
                     else {
-                        var msg = validator.error(self);
+                        var msg = validator.error.val();
                         self.error = formatMessage(msg,validator,self);
                         queue.pop()();
                     }
@@ -146,10 +147,10 @@ function ValidObj(name) {
     };
 
     
-    this._name = name;
+    this._propertyName = name;
     this.name = name;
     this.toString = function () {
-        return this._name;
+        return this._propertyName;
     }
     this.isPass = function () { return !this.enabled || this.error === ''; };
     this.notifyValidators=[]; //如果值发生变动，那么需要通知的其他binding
@@ -172,7 +173,10 @@ function ValidObj(name) {
                 variableName = propName.split(".")[1];
                 useObj=vObj;
             }
-            content = content.replace(new RegExp('\\[' + propName + '\\]', 'ig'), useObj[variableName]);
+            var val=useObj[variableName];
+            if(val.val)
+                val=val.val();            
+            content = content.replace(new RegExp('\\[' + propName + '\\]', 'ig'), val);
         });
         return content;
     };
@@ -186,7 +190,16 @@ function ValidObj(name) {
     /// <reference path='validator.js' />
 /// <reference path='const.js' />
 'use strict';
-function converTo(strValue, type) {
+function getAttrVal(attr) {
+    var result = {
+        attr: attr,
+        val: function () {
+            return this.attr.val;
+        }
+    }
+    return result;
+}
+function converTo(strValue, type, attr) {
     switch (type) {
         case 'number':
             strValue = parseFloat(strValue);
@@ -194,16 +207,14 @@ function converTo(strValue, type) {
         case 'booleam':
             strValue = strValue.toCaseLower() === 'true';
             break;
-        case 'function': //如果原来的property是function，那么就是改为方法 都attr，面对的场景是val-required-error 这类型标签
-            strValue = function () {
-                return this.attr.value;
-            };
+        case 'function': //如果原来的property是function，那么就是改为方法 都attr，面对的场景是val-required-error 这类型标签        
+            strValue = getAttrVal(attr);
             break;
     }
     return strValue;
 }
 
-function setPropertyVal(obj, pathes, val, type) {
+function setPropertyVal(obj, pathes, val, attr) {
     var property = pathes.pop();
     var curObj = obj, propName;
     while (pathes.length !== 0) {
@@ -214,10 +225,8 @@ function setPropertyVal(obj, pathes, val, type) {
             return false;
         }
     }
-    if (!type) { //如果没有设置 type值，那么类型就是他自己本身的类型
-        type = typeof curObj[property];
-    }
-    curObj[property] = converTo(val, type);
+    var type = typeof curObj[property];
+    curObj[property] = converTo(val, type, attr);
     //avalon.log('debug', property, '=', curObj[property]);
 }
 
@@ -242,7 +251,7 @@ var _ValidObjSet = {
                     _ValidObjSet._vObjLoop.call(this, function (compId, propertyName, vObj) {
                         vObj.valid(undefined, function (isPass) {
                             summary = summary && isPass;
-                            avalon.Array.remove(validResult, this.$compId + '.' + this._name);
+                            avalon.Array.remove(validResult, this.$compId + '.' + this._propertyName);
                             if (!validResult.length) {
                                 callback(summary);
                             }
@@ -252,7 +261,7 @@ var _ValidObjSet = {
                 enable: function (groupName, enabled) {
                     _ValidObjSet._vObjLoop.call(this, function (compId, propertyName, vObj) {
                         if (vObj.group == groupName) {
-                            vObj.enabled = enabled;                            
+                            vObj.enabled = enabled;
                         }
                     })
                 }
@@ -324,6 +333,10 @@ var validatorFactory = {
                 result[validatorName] = validator;
                 validator.vObj = vobj;
             }
+            else {
+                //validator.attrs[aryNames.pop()] = attr;
+                setPropertyVal(validator, aryNames, attr.value, attr);
+            }
             validator.init(binding, vobj);
         }
 
@@ -331,13 +344,11 @@ var validatorFactory = {
     },
     _creatorValidator: function (validatorCreator, pathes, attr) { //创建验证其的时候，可以附带一个属性值
         var result = new Validator();
-        result.attr = attr;
         var setting = validatorCreator();
         var propName = pathes.length > 0 ? pathes[pathes.length - 1] : false;//看看有没有属性值，如果有就要设置
         avalon.mix(result, setting);
-
         if (propName) {
-            setPropertyVal(result, pathes, attr.value);
+            setPropertyVal(result, pathes, attr.value, attr); //恶心的写法啊~~~
         }
         return result;
     }
@@ -423,7 +434,7 @@ var validatorFactory = {
 
   
 
-    'use strict'; 
+    'use strict';
 avalon[const_type] = {
     required: function () {
         return {
@@ -461,11 +472,14 @@ avalon[const_type] = {
     },
     range: function () {
         return {
-            min: 1,
-            max: 200,
+            min: avalon.noop,
+            max: avalon.noop,
             func: function (val, cb) {
                 var max = parseFloat(this.max.val());
                 var min = parseFloat(this.min.val());
+                if (min === NaN || max === NaN) {
+                    avalon.log("error", "Please defined val-range-min/max attr for " + this.vObj._name);
+                }
                 var p = parseFloat(val);
                 var result = (p >= min && p <= max);
                 cb(result);
@@ -482,9 +496,10 @@ avalon[const_type] = {
                 var data = this.vObj.comp[this.compare].getValue();
                 cb(data == val);
             },
-            error: function (vObj) {
-                var self = vObj.desc || vObj.name, compareTarget = this.vObj.comp[this.compare],
-                    compareText = compareTarget.name || compareTarget._name;
+            error: function (vObj,attr) {
+                var self = vObj.name || vObj._propertyName,
+                    compareTarget = this.vObj.comp[this.compare],
+                    compareText = compareTarget.name || compareTarget._propertyName;
                 return self + '与' + compareText + '不一致';
             },
             init: function (binding, vobj) {
@@ -496,15 +511,26 @@ avalon[const_type] = {
     regex: function () {
         return {
             pattern: '',
-            func: function (val, cb) {
+            func: function (value, cb) {
                 var reg = new RegExp(this.pattern);
-                cb(reg.test(val));
+                cb(reg.test(value));
             },
-            error: function (vObj) {
-                return (vObj.name || vObj._name) + '不正确';
+            error: function (vObj, attr) {
+                return '[vObj.name]不正确';
             }
         };
-    }  
+    },
+    int: function () {
+        return {
+            func: function (value, cb) {
+                cb(/^\-?\d+$/.test(value));
+            },
+            error: function (vObj) {
+                return '请输入整数';
+            }
+        }
+    }
+
 };
 
 })(avalon);
