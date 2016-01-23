@@ -1,32 +1,68 @@
 /* summary */
 
-
 /// <reference path="init.js" />
 /// <reference path="const.js" />
 (function (avalon) {
 
-    "use strict";
-
+    'use strict';   
+    
     /* const */
-    /* validation */
+      
+    /* Validator */
+    
+    /* ValidObj */
+        
     /* init */
+
+    var initHandler = {
+        'class': function (binding) {
+            //binding.type = 'class'//强制改为class;            
+            var ary = binding.expr.split(':');
+            if (ary.length < 2) {
+                avalon.log('error', binding.expr + ' 必须是 className:bindgName');
+                //throw new Exception(binding.expr + ' 必须是 className:bindgName');
+            }
+            var newValue = ary[1]; //ary[1] + ':' + const_prop + '.' + ary[0] + '.' + info.param;            
+            binding.expr = newValue;
+            binding.clz = ary[0];
+            binding.oneTime = true;
+        }
+    };
+
+    function getTagType(name) {
+
+        if (name.substr(0, basic_tag.class.length) === basic_tag.class) {
+            return basic_tag.class;
+        }
+        if (name.substr(0, basic_tag.display.length) === basic_tag.display) {
+            return basic_tag.display;
+        }
+        if (name.substr(0, basic_tag.val.length) === basic_tag.val) {
+            return basic_tag.val;
+        }
+    }
+
     avalon.directive(const_type, {
         init: function (binding) {
-            if (binding.name.substr(0, basic_tag.class.length) == basic_tag.class) {
+
+            var basicType = getTagType(binding.name);
+
+            if (basicType === basic_tag.class) {
                 initHandler.class(binding);
-            } else if (binding.name.substr(0, "ms-val-display".length) == "ms-val-display") {
+            } else if (basicType === basic_tag.display) {
                 binding.oneTime = true;
-            } else if (binding.name == basic_tag.val) {
-                var elem = binding.element;
-                avalon(elem).bind('blur', bCheck)
+            } else if (basicType === basic_tag.val) {
+                var elem = binding.element,
+                    bCheck = function () {
+                        //updateHandler.validator.call(binding, this.value, info);
+                        //var val = binding.getter ? binding.getter.apply(0, binding.args) : binding.oldValue;
+                        var vObj = _ValidObjSet.getValidObj(binding);
+                        vObj.valid();
+                    };
+                avalon(elem).bind('blur', bCheck);
                 binding.roolback = function () {
-                    avalon(elem).unbind("blur", bCheck)
-                }
-                function bCheck() {
-                    //updateHandler.validator.call(binding, this.value, info);
-                    var val = binding.getter ? binding.getter.apply(0, binding.args) : binding.oldValue;
-                    _ValidObjSet.getValidObj(binding).valid(val);
-                }
+                    avalon(elem).unbind('blur', bCheck);
+                };
             }
         },
         update: function (newValue, oldValue) {
@@ -34,70 +70,30 @@
             var binding = this;
             var vObj = _ValidObjSet.getValidObj(binding);
             if (isFirst) {
-                console.log("init " + binding.uniqueNumber);
-                //ms-val="prop"
-                //ms-val-display="prop"
-                //ms-val-class="class:prop"
-                
-                if (binding.name == basic_tag.val) {
-                    if (binding.name == basic_tag.val) {
-                        var validators = validatorFactory.create(binding, vObj);
-                        vObj.validators = validators;
-                        initHandler.validator(binding);
-                    }
+                var basicType = getTagType(binding.name);
+                if (basicType === basic_tag.val) {
+                    vObj.validators = validatorFactory.create(binding, vObj);
                     return;
                 }
-                else if (binding.name.substr(0, basic_tag.class.length) == basic_tag.class) {
+                else if (basicType === basic_tag.class) {
                     vObj.classBindings.push(binding);
                 }
-                else if (binding.name.substr(0, "ms-val-display".length) == "ms-val-display") {
+                else if (basicType === basic_tag.display) {
                     binding.oneTime = true;
                     vObj.displayBindings.push(binding);
                 } else {
-                    avalon.log("warn", binding.name + " do not support.")
+                    avalon.log('warn', binding.name + ' do not support.');
                 }
-                vObj.value = newValue;
                 return;
             }
             vObj.valid(newValue);
             vObj.notify();
         }
-    })
+    });
 
 
-    var initHandler = {
-        validator: function (binding) {
-            return;
-            var elem = binding.element;
-            avalon(elem).bind('blur', bCheck)
-            binding.roolback = function () {
-                avalon(elem).unbind("blur", bCheck)
-            }
-            function bCheck() {
-                //updateHandler.validator.call(binding, this.value, info);
-                var val = binding.getter.apply(0, binding.args);
-                _ValidObjSet.getValidObj(binding).valid(val);
-            }
-        },
-        "class": function (binding, info) {
-            //binding.type = "class"//强制改为class;            
-            var ary = binding.expr.split(':');
-            if (ary.length < 2) {
-                avalon.log("error", binding.expr + " 必须是 className:bindgName")
-                throw new Exception(binding.expr + " 必须是 className:bindgName");
-            }
-            var newValue = ary[1]; //ary[1] + ":" + const_prop + "." + ary[0] + "." + info.param;            
-            binding.expr = newValue;
-            binding.clz = ary[0];
-            binding.oneTime = true;
-        }
-
-    }
-
-     
+  
 
     /* validators */
-    /* message */
-    /* group */
 
-})(avalon)
+})(avalon);

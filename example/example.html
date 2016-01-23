@@ -19,21 +19,23 @@
 <body>
     <div class="container">
         <div class="row">
-            <div class="col-md-5">
+            <div class="col-md-12">
                 <div class="panel" ms-controller="changePassword">
                     <div class="panel-title">
                         <h3>修改密码</h3>
                     </div>
                     <div class="panel-body">
-                        <div>
-                            {{newPasswordEndMark}}
-                        </div>
+                        <ul>
+                            <li ms-val-display-error="model.password"></li>
+                            <li ms-val-display-error="model.newPassword"></li>
+                            <li ms-val-display-error="model.confirmPassword"></li>
+                        </ul>
+
                         <form>
                             <div class="form-group" ms-val-class-error="has-error:model.password" ms-val-class-error-1="has-error-s:model.password">
                                 <label class="control-label">当前密码</label>
                                 <input class="form-control" type="password" ms-val="model.password" val-required="val-required" ms-duplex="model.password"></input>
-                                <span class="help-block" ms-val-display="model.password"></span>
-                                 {{model.password}}
+                                <span class="help-block" ms-val-display="model.password"></span> {{model.password}}
                             </div>
 
                             <div class="form-group" ms-val-class-error="has-error:model.newPassword" ms-val-class-success="has-success:model.newPassword">
@@ -41,23 +43,14 @@
                                 <input class="form-control" type="password" ms-val="model.newPassword" val-required-error="请输入新密码" val-success="正确" ms-duplex="model.newPassword"></input>
                                 <!-- 分开显示成功和失败 -->
                                 <span class="help-block" ms-val-display-error="model.newPassword" style="color:#00ff00"></span>
-                                <span class="help-block" ms-val-display-success="model.newPassword"></span>
-                                 {{model.newPassword}}
                             </div>
                             <div class="form-group" ms-val-class-error="has-error:model.confirmPassword" ms-val-class-success="has-success:model.confirmPassword">
                                 <label class="control-label">再一次新密码</label>
-                                <input class="form-control" type="password" 
-                                       ms-val="model.confirmPassword"
-                                       val-required-error="请再一次输入新密码" val-success="再一次密码输入正确" 
-                                       ms-duplex="model.confirmPassword"
-                                       val-equal-compare="model.newPassword" val-equal-error="两次密码不正确"
-                                       >
-                                       
-                                       
-                                       </input>
+                                <input class="form-control" type="password" ms-val="model.confirmPassword" val-required-error="请再一次输入新密码" val-success="再一次密码输入正确"
+                                ms-duplex="model.confirmPassword" val-equal-compare="model.newPassword" val-equal-error="两次密码不正确">
+                                </input>
 
-                                <span class="help-block" ms-val-display="model.confirmPassword"></span>
-                                 {{model.confirmPassword}}
+                                <span class="help-block" ms-val-display-error="model.confirmPassword"></span> {{model.confirmPassword}}
                             </div>
                             <div class="form-actions">
                                 <input type="button" value="submit" ms-click="submit">
@@ -66,24 +59,33 @@
                         </form>
                     </div>
                 </div>
-                <div class="col-md-6">
+            </div>
+            <div class="row">
+                <div class="col-md-12">
                     <div class="panel-title">
                         标签说明
                     </div>
                     <div class="panel-body">
                         基本标签
                         <ul>
-                            <li>ms-val="XXX"</li>
-                            <li>ms-val-display="xxx"</li>
-                            <li>ms-val-class-error ms-val-class-success = "className:propName"</li>
+                            <li>ms-val="XXX" 验证这个对象。后面再说验证器</li>
+                            <li>ms-val-display="xxx" 从这个标签输出结果，可以用 ms-val-display-error输出错误结果，或者 ms-val-display-success 输出验证通过结果</li>
+                            <li>ms-val-class-error/success， 必须带有 success/error ，例如 ms-val-class-success = "className:propName"</li>
                         </ul>
-
-
+                        
+                        <h3>使用验证器</h3>
+                        
+                        <p>
+                            在 ms-val="prop" 所在的标签下， 用ms-val-required 就是使用 使用required这个验证器， ms-val-required-error="验证出错的说明"
+                            
+                        </p>
+                        
                     </div>
                 </div>
             </div>
-            <script>
-                var vm1 = avalon.define({
+        </div>
+        <script>
+            var vm1 = avalon.define({
                 $id: "changePassword",
                 model:{
                     newPassword: "",
@@ -103,9 +105,9 @@
                 
                 
             });
-            </script>
-        </div>     
-        <!--
+        </script>
+    </div>
+    <!--
         <div class="row">
             <div class="col-md-5" ms-controller="numberTest">
                 <form action="#">

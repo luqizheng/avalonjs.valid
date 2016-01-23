@@ -9,18 +9,17 @@ var gulp = require("gulp"),
     rename = require("gulp-rename"),
     saveLicense = require("uglify-save-license"),
     tsc = require("gulp-typescript"),
-    webpack = require("webpack"),
     gfi = require("gulp-file-insert"),
-    jshint=require("gulp-jshint");
-    
+    jshint = require("gulp-jshint");
+
 var version = "1.0" //当前版本号
 var now = new Date();  //构建日期
 var date = now.getFullYear() + "." + (now.getMonth() + 1) + "." + now.getDate()
 var jsHintOpt = {
-    node: true,
+    node: false,
     browser: true,
-    esnext: true,
-    bitwise: true,
+    esnext: false,
+    bitwise: false,
     curly: true,
     eqeqeq: true,
     immed: true,
@@ -38,41 +37,41 @@ var jsHintOpt = {
 };
 var gulpInsert = {
     "/* summary */": "./src/0.summary.js",
-    "/* validation */": "./src/validation.js",
-    "/* const */": "./src/const.js",    
-    "/* group */": "./src/group.js",
+    "/* Validator */": "./src/Validator.js",
+    "/* ValidObj */": "./src/ValidObj.js",
+    "/* const */": "./src/const.js",
     "/* init */": "./src/init.js",
-    "/* validators */": "./src/validators.js"    
+    "/* validators */": "./src/validators.js"
 };
 
-function creategulp(bUglify){
-   var d=gulp.src("./src/avalon.valid.js")
+function creategulp(bUglify) {
+    var d = gulp.src("./src/avalon.valid.js")
         .pipe(concat("avalon.valid.js"))
-        .pipe(gfi(gulpInsert))       
-        
-        //.pipe(jshint(jsHintOpt))
-        //.pipe(jshint.reporter('jshint-stylish'))
-        //.pipe(jshint.reporter('fail'));
-        if(bUglify)
-        {
-            d.pipe(rename({
-                suffix: '-' + version + '.min'
-            }))
-            d=d.pipe(uglify({output:{comments:saveLicense }}))
-        }
-        else{
-             d.pipe(rename({
-                suffix: '-' + version
-            }))
-        }
-        d.pipe(gulp.dest('dist'));
-        return d;
+        .pipe(gfi(gulpInsert))
+
+    if (bUglify) {
+        d.pipe(rename({
+            suffix: '-' + version + '.min'
+        }))
+        d = d.pipe(uglify({ output: { comments: saveLicense } }))
+    }
+    else {
+        d.pipe(rename({
+            suffix: '-' + version
+        }))
+    }
+    d.pipe(gulp.dest('dist'));
+    return d;
 }
 
-gulp.task('default',["clean:js"],function(){
-    gulp.run(['avalon','avalon:min']);    
+gulp.task('default', ["clean:js"], function () {
+    gulp.run(['avalon', 'avalon:min']);
 });
-
+gulp.task('check', function () {
+    return gulp.src("./dist/*.js").pipe(jshint(jsHintOpt))
+        .pipe(jshint.reporter('jshint-stylish'))
+        .pipe(jshint.reporter('fail'));
+})
 gulp.task("clean:js", function (cb) {
     rimraf("dist", cb);
 });
@@ -87,7 +86,7 @@ gulp.task("avalon:min", function (cb) {
         }))
         .pipe(uglify({output:{comments:saveLicense }}))
         .pipe(gulp.dest('dist'));*/
-        return creategulp(true);
+    return creategulp(true);
 })
 gulp.task("avalon", function (cb) {
     return creategulp(false);
