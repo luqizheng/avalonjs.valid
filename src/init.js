@@ -20,9 +20,9 @@ function converTo(strValue, type) {
 
 function setPropertyVal(obj, pathes, val, type) {
     var property = pathes.pop();
-    var curObj = obj,propName;
+    var curObj = obj, propName;
     while (pathes.length !== 0) {
-        propName=pathes.shift();
+        propName = pathes.shift();
         curObj = curObj[propName];
         if (curObj === undefined) {
             avalon.log('warn', propName, 'is not exist.');
@@ -54,16 +54,24 @@ var _ValidObjSet = {
                         validResult.push(compId + '.' + propertyName);
                     });
 
-                    _ValidObjSet._vObjLoop.call(this, function (compId, propertyName) {
-                        this[compId][propertyName].valid(undefined, function (isPass) {
+                    _ValidObjSet._vObjLoop.call(this, function (compId, propertyName, vObj) {
+                        vObj.valid(undefined, function (isPass) {
                             summary = summary && isPass;
-                            avalon.Array.remove(validResult, this.$compId + '.' + this.name);
+                            avalon.Array.remove(validResult, this.$compId + '.' + this._name);
                             if (!validResult.length) {
                                 callback(summary);
                             }
                         });
                     });
+                },
+                enable: function (groupName, enabled) {
+                    _ValidObjSet._vObjLoop.call(this, function (compId, propertyName, vObj) {
+                        if (vObj.group == groupName) {
+                            vObj.enabled = enabled;                            
+                        }
+                    })
                 }
+
             };
         }
         var comp = vmodel[const_prop][$id];
@@ -99,7 +107,7 @@ var _ValidObjSet = {
                 continue;
             }
             for (var propertyName in this[compId]) {
-                action.call(this, compId, propertyName);
+                action.call(this, compId, propertyName, this[compId][propertyName]);
             }
         }
     }

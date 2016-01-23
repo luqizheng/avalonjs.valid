@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-theme.css">
+    <script src="../lib/avalon.js"></script>
+    <script src="../dist/avalon.valid-1.0.js"></script>
+
+    <style>
+        .has-error-s {
+            background-color: #cfcfcf;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="panel">
+            <div class="col-md-5">
+                <form action="" ms-controller="regex">
+                    <div class="form-group" ms-val-class-error="has-error:Name">
+                        <label class="form-label"></label>
+                        <input type="text" class="form-control" ms-duplex="Name" ms-val="Name" val-regex-pattern="\w{1,10}" val-regex-error="请输入1到10个字符串"
+                        val-success="验证正确" />
+                        <span class="help-block" ms-val-display="Name"></span>
+                    </div>
+                    <div>
+                        <button ms-click="submit">submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        var vam=avalon.define({
+            $id:"regex",
+            Name:"test",
+            submit:function(){
+                vam.$val.valid(function(isValid){
+                    alert("验证"+isValid);
+                });                
+            }
+        });
+    </script>
+</body>
+
+</html>

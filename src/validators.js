@@ -70,10 +70,10 @@ avalon[const_type] = {
     },
     regex: function () {
         return {
-            patten: '',
+            pattern: '',
             func: function (val, cb) {
-                var reg = new RegExp(this.patten);
-                cb(reg.text(val));
+                var reg = new RegExp(this.pattern);
+                cb(reg.test(val));
             },
             error: function (vObj) {
                 return (vObj.name || vObj._name) + '不正确';

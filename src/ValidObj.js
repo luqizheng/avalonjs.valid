@@ -11,6 +11,11 @@ function ValidObj(name) {
     this.classBindings = [];//bidng of class.
     this.displayBindings = [];//bind of display   
     this.binding=null; //binding of avalon.
+    this.enabled=true;
+    this.group="";  
+    
+    
+    this._isFristVal=true; //是否为第一次验证，如果是，无论值是否相同都要执行。
     this.output = function () {
         //已经知道结果了。
         var self = this;
@@ -36,6 +41,11 @@ function ValidObj(name) {
         return binding.getter ? binding.getter.apply(0, binding.args) : binding.oldValue;
     };
     this.isSameValue=function(newValue){
+        if(this._isFristVal)
+        {
+            this._isFirstVal=false;
+            return false;
+        }
         var binding=this.binding;
         if(!binding.getter){
             return true;
@@ -46,18 +56,24 @@ function ValidObj(name) {
         return newValue && newValue === binding.oldValue; //如果新值为空，那么就需要验证其验证。否则跳过。         
     };
     this.valid = function (newValue,callback) {
+        
         var self = this;
-        if (this.isSameValue(newValue)) {
-            //newValue没有输入，那么检查binding是否带有getter，如果有证明值已经更改过但是还没有获取到
-            //那么不需要检查.直接将上一次的结果返回就可以了。
-            if(!callback){
-                callback.call(self, self.isPass());
-                return;      
-            }       
+        if(!self.enabled)
+        {
+            return ;
         }
-        if(newValue===undefined){
+         if(newValue===undefined){
             newValue = this.getValue();
         }        
+        if (this.isSameValue(newValue)) { //没有enable，那么直接验证就可以了。
+            //newValue没有输入，那么检查binding是否带有getter，如果有证明值已经更改过但是还没有获取到
+            //那么不需要检查.直接将上一次的结果返回就可以了。
+            if(avalon.isFunction(callback)){
+                callback.call(self, self.isPass());               
+            }       
+           return;      
+        }
+       
         self.validating = true;
         self.error = '';       
      
@@ -79,8 +95,7 @@ function ValidObj(name) {
             self.validating = true;
             var validator = queue.shift();
             if (!avalon.isFunction(validator)) {
-                validator.func(newValue, function (isPass) {
-                    validator.isPass = isPass;
+                validator.func(newValue, function (isPass) {                   
                     if (isPass) {
                         _validQueue(); //成功继续验证。
                     }
@@ -105,7 +120,7 @@ function ValidObj(name) {
     this.toString = function () {
         return this._name;
     }
-    this.isPass = function () { return this.error === ''; };
+    this.isPass = function () { return !this.enabled || this.error === ''; };
     this.notifyValidators=[]; //如果值发生变动，那么需要通知的其他binding
     
     this.notify=function(){
@@ -118,13 +133,15 @@ function ValidObj(name) {
         var msgRegex = /\[([^\[\]]|\[([^\[\]])*\])*\]/gi;
         var matches = content.match(msgRegex);
         avalon.each(matches, function (i, v) {
-            var propName = v.substring(1, v.length - 1); //去除中括号
-            var useObj=validator,vobj="vObj";
-            if(propName.subStr(0,vobj.length)===vobj){//如果是vObj开头用vObj的变量
-                propName = propName.split(".")[1];
+            var propName = v.substring(1, v.length - 1),
+                variableName=propName, //去除中括号
+                useObj=validator,
+                vobj="vObj";
+            if(propName.substr(0,vobj.length)===vobj){//如果是vObj开头用vObj的变量
+                variableName = propName.split(".")[1];
                 useObj=vObj;
             }
-            content = content.replace(new RegExp('\\[' + propName + '\\]', 'ig'), useObj[propName]);
+            content = content.replace(new RegExp('\\[' + propName + '\\]', 'ig'), useObj[variableName]);
         });
         return content;
     };
