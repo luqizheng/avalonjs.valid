@@ -2,13 +2,10 @@
 /// <reference path='const.js' />
 'use strict';
 function getAttrVal(attr) {
-    var result = {
-        attr: attr,
-        val: function () {
-            return this.attr.val;
-        }
+    return function () {
+        var at = attr;
+        return at.value;
     }
-    return result;
 }
 function converTo(strValue, type, attr) {
     switch (type) {

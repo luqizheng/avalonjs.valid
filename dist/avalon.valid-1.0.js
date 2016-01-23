@@ -132,7 +132,7 @@ function ValidObj(name) {
                         _validQueue(); //成功继续验证。
                     }
                     else {
-                        var msg = validator.error.val();
+                        var msg = validator.error();
                         self.error = formatMessage(msg,validator,self);
                         queue.pop()();
                     }
@@ -173,10 +173,10 @@ function ValidObj(name) {
                 variableName = propName.split(".")[1];
                 useObj=vObj;
             }
-            var val=useObj[variableName];
-            if(val.val)
-                val=val.val();            
-            content = content.replace(new RegExp('\\[' + propName + '\\]', 'ig'), val);
+            var property=useObj[variableName];
+            if(avalon.isFunction(property))
+                property=property();            
+            content = content.replace(new RegExp('\\[' + propName + '\\]', 'ig'), property);
         });
         return content;
     };
@@ -191,13 +191,10 @@ function ValidObj(name) {
 /// <reference path='const.js' />
 'use strict';
 function getAttrVal(attr) {
-    var result = {
-        attr: attr,
-        val: function () {
-            return this.attr.val;
-        }
+    return function () {
+        var at = attr;
+        return at.value;
     }
-    return result;
 }
 function converTo(strValue, type, attr) {
     switch (type) {
@@ -475,8 +472,8 @@ avalon[const_type] = {
             min: avalon.noop,
             max: avalon.noop,
             func: function (val, cb) {
-                var max = parseFloat(this.max.val());
-                var min = parseFloat(this.min.val());
+                var max = parseFloat(this.max());
+                var min = parseFloat(this.min());
                 if (min === NaN || max === NaN) {
                     avalon.log("error", "Please defined val-range-min/max attr for " + this.vObj._name);
                 }

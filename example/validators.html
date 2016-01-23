@@ -15,6 +15,21 @@
             background-color: #cfcfcf;
         }
     </style>
+    <script>
+        function createFunct(str)
+        {
+            var result= function(){
+                var b=str;
+                return b;
+            }
+            return result;
+        }
+        
+        var a=createFunct("ok");
+        var b=createFunct("wtf")
+        console.log(a());
+        console.log(b())
+        </script>
 </head>
 
 <body>
@@ -72,11 +87,11 @@
             <div class="panel-body">
                 <div class="col-md-5">
                     <form action="" ms-controller="range">
-                        <div class="form-group" ms-val-class-error="has-error:intNumber">
+                        <div class="form-group" ms-val-class-error="has-error:floatNumber">
                             <label class="form-label">浮点： ms-duplex同步</label>
-                            <input type="text" class="form-control" ms-duplex="intNumber" ms-val="intNumber" val-range-min="1.4" val-range-max="2.0"
+                            <input type="text" class="form-control" ms-duplex="floatNumber" ms-val="floatNumber" val-range-min="1.4" val-range-max="2.0"
                             val-success="验证正确" />
-                            <span class="help-block" ms-val-display="intNumber"></span>
+                            <span class="help-block" ms-val-display="floatNumber"></span>
                         </div>
                         <div class="form-group" ms-val-class-error="has-error:floatNumber">
                             <label class="form-label">整型范围</label>
@@ -91,11 +106,11 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group" ms-val-class-error="has-error:floatNumber">
+                        <div class="form-group" ms-val-class-error="has-error:intNumber">
                             <label class="form-label">整型：ms-duplex</label>
-                            <input type="number" class="form-control" ms-val="floatNumber" ms-attr-val-range-min="intRange.min" ms-attr-val-range-max="intRange.max"
+                            <input type="number" class="form-control" ms-duplex="intNumber" ms-val="intNumber" ms-attr-val-range-min="intRange.min" ms-attr-val-range-max="intRange.max"
                             val-success="验证正确" />
-                            <span class="help-block" ms-val-display="floatNumber"></span>
+                            <span class="help-block" ms-val-display="intNumber"></span>
                         </div>
                         <div>
                             <button ms-click="submit">submit</button>

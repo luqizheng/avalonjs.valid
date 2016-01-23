@@ -39,8 +39,8 @@ avalon[const_type] = {
             min: avalon.noop,
             max: avalon.noop,
             func: function (val, cb) {
-                var max = parseFloat(this.max.val());
-                var min = parseFloat(this.min.val());
+                var max = parseFloat(this.max());
+                var min = parseFloat(this.min());
                 if (min === NaN || max === NaN) {
                     avalon.log("error", "Please defined val-range-min/max attr for " + this.vObj._name);
                 }

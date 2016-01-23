@@ -100,7 +100,7 @@ function ValidObj(name) {
                         _validQueue(); //成功继续验证。
                     }
                     else {
-                        var msg = validator.error.val();
+                        var msg = validator.error();
                         self.error = formatMessage(msg,validator,self);
                         queue.pop()();
                     }
@@ -141,10 +141,10 @@ function ValidObj(name) {
                 variableName = propName.split(".")[1];
                 useObj=vObj;
             }
-            var val=useObj[variableName];
-            if(val.val)
-                val=val.val();            
-            content = content.replace(new RegExp('\\[' + propName + '\\]', 'ig'), val);
+            var property=useObj[variableName];
+            if(avalon.isFunction(property))
+                property=property();            
+            content = content.replace(new RegExp('\\[' + propName + '\\]', 'ig'), property);
         });
         return content;
     };
