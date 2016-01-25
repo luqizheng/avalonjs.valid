@@ -355,7 +355,7 @@ var validatorFactory = {
             //binding.type = 'class'//强制改为class;            
             var ary = binding.expr.split(':');
             if (ary.length < 2) {
-                avalon.log('error', binding.expr + ' 必须是 className:bindgName');
+                avalon.log('error', binding.expr + '必须是', binding.expr,'="className:bindName 这种格式');
                 //throw new Exception(binding.expr + ' 必须是 className:bindgName');
             }
             var newValue = ary[1]; //ary[1] + ':' + const_prop + '.' + ary[0] + '.' + info.param;            
@@ -474,6 +474,19 @@ function compare(func, errorFunc) {
         }
     };
 }
+function createRegex(reg, error) {
+    return {
+        func: function (value, cb) {
+            if (value)
+                cb(reg.test(value));
+            else
+                cb(true)
+        },
+        error: function () {
+            return error
+        }
+    }
+}
 avalon[const_type] = {
     required: function () {
         return {
@@ -527,7 +540,8 @@ avalon[const_type] = {
                 return '请输入的数值范围在[min]和[max]之间';
             }
         };
-    }, regex: function () {
+    },
+    regex: function () {
         return {
             pattern: '',
             func: function (value, cb) {
@@ -539,17 +553,18 @@ avalon[const_type] = {
             }
         };
     },
-    int: function () {
-        return {
-            func: function (value, cb) {
-                cb(/^\-?\d+$/.test(value));
-            },
-            error: function (vObj) {
-                return '请输入整数';
-            }
-        }
+    int: function () {        
+        return createRegex(/^\-?\d+$/,'请输入整数')
     },
-
+    email: function () {
+        return createRegex(/^([A-Z0-9]+[_|\_|\.]?)*[A-Z0-9]+@([A-Z0-9]+[_|\_|\.]?)*[A-Z0-9]+\.[A-Z]{2,3}$/i, '请输入正确的电子邮件');
+    },
+    qq: function () {
+        return createRegex(/^[1-9]\d{4,10}$/, '请输入正确的qq号码')
+    },
+    chs:function(){
+        return createRegex(/^[\u4e00-\u9fa5]+$/,"请输入中文")
+    },
     eq: function () {
         return compare(function (val1, val2, cb) {
             cb(val1 == val2);
@@ -571,7 +586,7 @@ avalon[const_type] = {
             return "请确保" + self + '要大于' + compare;
         })
     }
-  
+
 };
 
 })(avalon);
