@@ -132,7 +132,7 @@ function ValidObj(name) {
                         _validQueue(); //成功继续验证。
                     }
                     else {
-                        var msg = validator.error();
+                        var msg = validator.error(self);
                         self.error = formatMessage(msg,validator,self);
                         queue.pop()();
                     }
@@ -161,9 +161,8 @@ function ValidObj(name) {
         });
     };
 
-    var formatMessage = function (content,validator,vObj) {
-        var msgRegex = /\[([^\[\]]|\[([^\[\]])*\])*\]/gi;
-        var matches = content.match(msgRegex);
+    var formatMessage = function (content,validator,vObj) {        
+        var matches = content.match(/\[([^\[\]]|\[([^\[\]])*\])*\]/gi);
         avalon.each(matches, function (i, v) {
             var propName = v.substring(1, v.length - 1),
                 variableName=propName, //去除中括号
@@ -398,7 +397,7 @@ var validatorFactory = {
                     };
                 avalon(elem).bind('blur', bCheck);
                 binding.roolback = function () {
-                    avalon(elem).unbind('blur', bCheck);
+                    avalon(elem).unbind('blur', bCheck);                    
                 };
             }
         },
@@ -432,6 +431,49 @@ var validatorFactory = {
   
 
     'use strict';
+function getByVal(val) {
+    return function () {
+        return val;
+    }
+}
+function compare(func, errorFunc) {
+    return {
+        compare: '',
+        value: avalon.noop,
+        func: function (val1, cb) {
+            var valFunc = this.vObj.comp[this.compare];
+            var val2;
+            if (!valFunc)
+                val2 = this.value();
+            else
+                val2 = valFunc.getValue();
+            func(val1, val2, cb)
+        },
+        error: function (vObj) {
+            var self = vObj.name || vObj._propertyName,
+                compareTarget = this.vObj.comp[this.compare],
+                compareText = compareTarget ? (compareTarget.name || compareTarget._propertyName) : (this.compare || this.value());
+            return errorFunc(self, compareText)
+        },
+        init: function (binding, vobj) {
+            var compareValidObj = this.vObj.comp[this.compare], self = this;
+            if (compareValidObj) {
+                compareValidObj.notifyValidators.push(this);
+            } else {
+                for (var i = 0; i < binding.vmodels.length; i++) {
+                    var vmodel = binding.vmodels[i];
+                    if (vmodel[this.compare]) {
+                        self.value = getByVal(vmodel[this.compare]);
+                        vmodel.$watch(this.compare, function (newValue) {
+                            self.valid();
+                        });
+                        break;
+                    }
+                }
+            }
+        }
+    };
+}
 avalon[const_type] = {
     required: function () {
         return {
@@ -485,27 +527,7 @@ avalon[const_type] = {
                 return '请输入的数值范围在[min]和[max]之间';
             }
         };
-    },
-    equal: function () {
-        return {
-            compare: '',
-            func: function (val, cb) {
-                var data = this.vObj.comp[this.compare].getValue();
-                cb(data == val);
-            },
-            error: function (vObj,attr) {
-                var self = vObj.name || vObj._propertyName,
-                    compareTarget = this.vObj.comp[this.compare],
-                    compareText = compareTarget.name || compareTarget._propertyName;
-                return self + '与' + compareText + '不一致';
-            },
-            init: function (binding, vobj) {
-                var compareValidObj = this.vObj.comp[this.compare];
-                compareValidObj.notifyValidators.push(this);
-            }
-        };
-    },
-    regex: function () {
+    }, regex: function () {
         return {
             pattern: '',
             func: function (value, cb) {
@@ -513,7 +535,7 @@ avalon[const_type] = {
                 cb(reg.test(value));
             },
             error: function (vObj, attr) {
-                return '[vObj.name]不正确';
+                return '[vObj.name]格式不正确';
             }
         };
     },
@@ -526,8 +548,30 @@ avalon[const_type] = {
                 return '请输入整数';
             }
         }
-    }
+    },
 
+    eq: function () {
+        return compare(function (val1, val2, cb) {
+            cb(val1 == val2);
+        }, function (self, compare) {
+            return self + '与' + compare + '不一致';
+        })
+    },
+    lt: function () {
+        return compare(function (val1, val2, cb) {
+            cb(val1 < val2);
+        }, function (self, compare) {
+            return "请确保" + self + '要少于' + compare;
+        })
+    },
+    gt: function () {
+        return compare(function (val1, val2, cb) {
+            cb(val1 > val2);
+        }, function (self, compare) {
+            return "请确保" + self + '要大于' + compare;
+        })
+    }
+  
 };
 
 })(avalon);

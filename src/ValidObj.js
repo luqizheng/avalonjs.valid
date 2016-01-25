@@ -100,7 +100,7 @@ function ValidObj(name) {
                         _validQueue(); //成功继续验证。
                     }
                     else {
-                        var msg = validator.error();
+                        var msg = validator.error(self);
                         self.error = formatMessage(msg,validator,self);
                         queue.pop()();
                     }
@@ -129,9 +129,8 @@ function ValidObj(name) {
         });
     };
 
-    var formatMessage = function (content,validator,vObj) {
-        var msgRegex = /\[([^\[\]]|\[([^\[\]])*\])*\]/gi;
-        var matches = content.match(msgRegex);
+    var formatMessage = function (content,validator,vObj) {        
+        var matches = content.match(/\[([^\[\]]|\[([^\[\]])*\])*\]/gi);
         avalon.each(matches, function (i, v) {
             var propName = v.substring(1, v.length - 1),
                 variableName=propName, //去除中括号

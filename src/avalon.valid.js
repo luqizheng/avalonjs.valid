@@ -61,7 +61,7 @@
                     };
                 avalon(elem).bind('blur', bCheck);
                 binding.roolback = function () {
-                    avalon(elem).unbind('blur', bCheck);
+                    avalon(elem).unbind('blur', bCheck);                    
                 };
             }
         },

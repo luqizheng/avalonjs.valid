@@ -13,6 +13,9 @@
         .has-error-s {
             background-color: #cfcfcf;
         }
+        body{
+            background-color:#E2E2E2
+        }
     </style>
 </head>
 
@@ -47,7 +50,7 @@
                             <div class="form-group" ms-val-class-error="has-error:model.confirmPassword" ms-val-class-success="has-success:model.confirmPassword">
                                 <label class="control-label">再一次新密码</label>
                                 <input class="form-control" type="password" ms-val="model.confirmPassword" val-required-error="请再一次输入新密码" val-success="再一次密码输入正确"
-                                ms-duplex="model.confirmPassword" val-equal-compare="model.newPassword" val-equal-error="两次密码不正确">
+                                ms-duplex="model.confirmPassword" val-eq-compare="model.newPassword" val-eq-error="两次密码不正确">
                                 </input>
 
                                 <span class="help-block" ms-val-display-error="model.confirmPassword"></span> {{model.confirmPassword}}
