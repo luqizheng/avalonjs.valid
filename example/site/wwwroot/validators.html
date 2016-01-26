@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap.css">
-    <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap-theme.css">
-    <script src="../lib/jquery-1.11.3.min.js"></script>
-    <script src="../lib/avalon.js"></script>
-    <script src="../dist/avalon.valid-1.0.js"></script>    
+   <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-theme.css">
+    <script src="lib/jquery-1.11.3.min.js"></script>
+    <script src="lib/avalon.js"></script>
+    <script src="dist/avalon.valid-1.0.js"></script>    
 
     <style>
         .has-error-s {
@@ -286,7 +286,7 @@
                             <div class="form-group" ms-val-class-error="has-error:model.email" ms-val-class-success="has-success:model.email">
                                 <label class="form-label">验证Email</label>
                                 <input type="text" class="form-control" ms-duplex="model.email" ms-val="model.email"
-                                data-val-ajax-url="ajaxValidator.html" 
+                                val-ajax-url="ajax.json" 
                                 ms-attr-val-ajax-data-email="model.email"
                                 ms-attr-val-ajax-data-id="model.id" , ms-attr-val-ajax-data-email="model.backup" val-success="验证正确"
                                 />
