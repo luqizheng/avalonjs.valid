@@ -18,22 +18,26 @@ function compare(func, errorFunc) {
             func(val1, val2, cb)
         },
         error: function (vObj) {
-            var self = vObj.name || vObj._propertyName,
-                compareTarget = this.vObj.comp[this.compare],
-                compareText = compareTarget ? (compareTarget.name || compareTarget._propertyName) : (this.compare || this.value());
-            return errorFunc(self, compareText)
+            var self = this, selfName = vObj.name || vObj._propertyName,
+                compareTarget = self.vObj.comp[self.compare],
+                compareText = compareTarget ? (compareTarget.name || compareTarget._propertyName) : (self.compare || self.value());
+            return errorFunc(selfName, compareText)
         },
-        init: function (binding, vobj) {
-            var compareValidObj = this.vObj.comp[this.compare], self = this;
+        inited: function (binding, vobj) {
+
+            var self = this, value = self.value(),
+                compareValidObj = self.vObj.comp[self.compare];
+            if (value !== undefined)
+                return;
             if (compareValidObj) {
-                compareValidObj.notifyValidators.push(this);
+                compareValidObj.notifyValidators.push(self);
             } else {
                 for (var i = 0; i < binding.vmodels.length; i++) {
                     var vmodel = binding.vmodels[i];
-                    if (vmodel[this.compare]) {
-                        self.value = getByVal(vmodel[this.compare]);
-                        vmodel.$watch(this.compare, function (newValue) {
-                            self.valid();
+                    if (vmodel[self.compare]) {
+                        self.value = getByVal(vmodel[self.compare]);
+                        vmodel.$watch(self.compare, function (newValue) {
+                            vobj.valid();
                         });
                         break;
                     }
@@ -45,10 +49,7 @@ function compare(func, errorFunc) {
 function createRegex(reg, error) {
     return {
         func: function (value, cb) {
-            if (value)
-                cb(reg.test(value));
-            else
-                cb(true)
+            cb(value === "" ? true : reg.test(value))
         },
         error: function () {
             return error
@@ -121,8 +122,8 @@ avalon[const_type] = {
             }
         };
     },
-    int: function () {        
-        return createRegex(/^\-?\d+$/,'请输入整数')
+    int: function () {
+        return createRegex(/^\-?\d+$/, '请输入整数')
     },
     email: function () {
         return createRegex(/^([A-Z0-9]+[_|\_|\.]?)*[A-Z0-9]+@([A-Z0-9]+[_|\_|\.]?)*[A-Z0-9]+\.[A-Z]{2,3}$/i, '请输入正确的电子邮件');
@@ -130,8 +131,8 @@ avalon[const_type] = {
     qq: function () {
         return createRegex(/^[1-9]\d{4,10}$/, '请输入正确的qq号码')
     },
-    chs:function(){
-        return createRegex(/^[\u4e00-\u9fa5]+$/,"请输入中文")
+    chs: function () {
+        return createRegex(/^[\u4e00-\u9fa5]+$/, "请输入中文")
     },
     eq: function () {
         return compare(function (val1, val2, cb) {
@@ -144,15 +145,46 @@ avalon[const_type] = {
         return compare(function (val1, val2, cb) {
             cb(val1 < val2);
         }, function (self, compare) {
-            return "请确保" + self + '要少于' + compare;
+            return '请确保' + self + '要少于' + compare;
         })
     },
     gt: function () {
         return compare(function (val1, val2, cb) {
             cb(val1 > val2);
         }, function (self, compare) {
-            return "请确保" + self + '要大于' + compare;
+            return '请确保' + self + '要大于' + compare;
         })
+    },
+    ajax: function () {
+        return {
+            method: 'get',
+            url: '',
+            data: {},
+            func: function (val, cb) {
+                var obj = {};
+                for (var key in this.data) {
+                    obj[key] = this.data[key]();
+                }
+                $.ajax({
+                    method: this.method,
+                    url: this.url,
+                    data: obj,
+                    success: function (ret) {
+                        cb(ret);
+                    }
+                });
+            },
+            init: function (binding) {
+                var self = this;
+                for (var i = 0; i < binding.element.attributes.length; i++) {
+                    var attr = binding.element.attributes[i];
+                    if (/val-ajax-data-.+/i.test(attr.name)) {
+                        var pathes = attr.name.substr('val-ajax-data-'.length).split('-');
+                        setPropertyVal(self.data, pathes, avalon.noop, attr);
+                    }
+                }
+            }
+        }
     }
 
 };

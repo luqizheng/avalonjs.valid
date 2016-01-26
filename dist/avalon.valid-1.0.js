@@ -26,7 +26,8 @@ function Validator() {
     this.async = false; //async validator, if you use ajax in the this.func, please set it to true.
     this.func = false;//function (value,callback) {}
     this.init = avalon.noop;
-    this.attrs={};//属性访问其，默认情况是 {properyName,attr对象}
+    this.inited = avalon.noop;
+    this.attrs = {};//属性访问其，默认情况是 {properyName,attr对象}
 }
 
     
@@ -215,11 +216,10 @@ function setPropertyVal(obj, pathes, val, attr) {
     var curObj = obj, propName;
     while (pathes.length !== 0) {
         propName = pathes.shift();
-        curObj = curObj[propName];
-        if (curObj === undefined) {
-            avalon.log('warn', propName, 'is not exist.');
-            return false;
+        if (curObj[propName] === undefined) {            
+            curObj[propName] = {};            
         }
+        curObj = curObj[propName];
     }
     var type = typeof curObj[property];
     curObj[property] = converTo(val, type, attr);
@@ -325,29 +325,30 @@ var validatorFactory = {
 
             var validator = result[validatorName];
             if (!validator) {
-                validator = this._creatorValidator(validatorCreator, aryNames, attr);
+                validator = new Validator();// this._creatorValidator(validatorCreator, aryNames, attr);
+                avalon.mix(validator, validatorCreator())
                 result[validatorName] = validator;
                 validator.vObj = vobj;
-            }
-            else {
-                //validator.attrs[aryNames.pop()] = attr;
-                setPropertyVal(validator, aryNames, attr.value, attr);
-            }
-            validator.init(binding, vobj);
+                validator.init(binding, vobj);
+            }              
+            //validator.attrs[aryNames.pop()] = attr;
+            setPropertyVal(validator, aryNames, attr.value, attr);
         }
-
+        for (var key in result) {
+            result[key].inited(binding, vobj);
+        }
         return result;
-    },
+    }/*,
     _creatorValidator: function (validatorCreator, pathes, attr) { //创建验证其的时候，可以附带一个属性值
         var result = new Validator();
         var setting = validatorCreator();
-        var propName = pathes.length > 0 ? pathes[pathes.length - 1] : false;//看看有没有属性值，如果有就要设置
+        //var propName = pathes.length > 0 ? pathes[pathes.length - 1] : false;//看看有没有属性值，如果有就要设置
         avalon.mix(result, setting);
-        if (propName) {
-            setPropertyVal(result, pathes, attr.value, attr); //恶心的写法啊~~~
-        }
+        //if (propName) {
+        //    setPropertyVal(result, pathes, attr.value, attr); //恶心的写法啊~~~
+        //}
         return result;
-    }
+    }*/
 };
 
     var initHandler = {
@@ -450,22 +451,26 @@ function compare(func, errorFunc) {
             func(val1, val2, cb)
         },
         error: function (vObj) {
-            var self = vObj.name || vObj._propertyName,
-                compareTarget = this.vObj.comp[this.compare],
-                compareText = compareTarget ? (compareTarget.name || compareTarget._propertyName) : (this.compare || this.value());
-            return errorFunc(self, compareText)
+            var self = this, selfName = vObj.name || vObj._propertyName,
+                compareTarget = self.vObj.comp[self.compare],
+                compareText = compareTarget ? (compareTarget.name || compareTarget._propertyName) : (self.compare || self.value());
+            return errorFunc(selfName, compareText)
         },
-        init: function (binding, vobj) {
-            var compareValidObj = this.vObj.comp[this.compare], self = this;
+        inited: function (binding, vobj) {
+
+            var self = this, value = self.value(),
+                compareValidObj = self.vObj.comp[self.compare];
+            if (value !== undefined)
+                return;
             if (compareValidObj) {
-                compareValidObj.notifyValidators.push(this);
+                compareValidObj.notifyValidators.push(self);
             } else {
                 for (var i = 0; i < binding.vmodels.length; i++) {
                     var vmodel = binding.vmodels[i];
-                    if (vmodel[this.compare]) {
-                        self.value = getByVal(vmodel[this.compare]);
-                        vmodel.$watch(this.compare, function (newValue) {
-                            self.valid();
+                    if (vmodel[self.compare]) {
+                        self.value = getByVal(vmodel[self.compare]);
+                        vmodel.$watch(self.compare, function (newValue) {
+                            vobj.valid();
                         });
                         break;
                     }
@@ -477,10 +482,7 @@ function compare(func, errorFunc) {
 function createRegex(reg, error) {
     return {
         func: function (value, cb) {
-            if (value)
-                cb(reg.test(value));
-            else
-                cb(true)
+            cb(value === "" ? true : reg.test(value))
         },
         error: function () {
             return error
@@ -553,8 +555,8 @@ avalon[const_type] = {
             }
         };
     },
-    int: function () {        
-        return createRegex(/^\-?\d+$/,'请输入整数')
+    int: function () {
+        return createRegex(/^\-?\d+$/, '请输入整数')
     },
     email: function () {
         return createRegex(/^([A-Z0-9]+[_|\_|\.]?)*[A-Z0-9]+@([A-Z0-9]+[_|\_|\.]?)*[A-Z0-9]+\.[A-Z]{2,3}$/i, '请输入正确的电子邮件');
@@ -562,8 +564,8 @@ avalon[const_type] = {
     qq: function () {
         return createRegex(/^[1-9]\d{4,10}$/, '请输入正确的qq号码')
     },
-    chs:function(){
-        return createRegex(/^[\u4e00-\u9fa5]+$/,"请输入中文")
+    chs: function () {
+        return createRegex(/^[\u4e00-\u9fa5]+$/, "请输入中文")
     },
     eq: function () {
         return compare(function (val1, val2, cb) {
@@ -576,15 +578,46 @@ avalon[const_type] = {
         return compare(function (val1, val2, cb) {
             cb(val1 < val2);
         }, function (self, compare) {
-            return "请确保" + self + '要少于' + compare;
+            return '请确保' + self + '要少于' + compare;
         })
     },
     gt: function () {
         return compare(function (val1, val2, cb) {
             cb(val1 > val2);
         }, function (self, compare) {
-            return "请确保" + self + '要大于' + compare;
+            return '请确保' + self + '要大于' + compare;
         })
+    },
+    ajax: function () {
+        return {
+            method: 'get',
+            url: '',
+            data: {},
+            func: function (val, cb) {
+                var obj = {};
+                for (var key in this.data) {
+                    obj[key] = this.data[key]();
+                }
+                $.ajax({
+                    method: this.method,
+                    url: this.url,
+                    data: obj,
+                    success: function (ret) {
+                        cb(ret);
+                    }
+                });
+            },
+            init: function (binding) {
+                var self = this;
+                for (var i = 0; i < binding.element.attributes.length; i++) {
+                    var attr = binding.element.attributes[i];
+                    if (/val-ajax-data-.+/i.test(attr.name)) {
+                        var pathes = attr.name.substr('val-ajax-data-'.length).split('-');
+                        setPropertyVal(self.data, pathes, avalon.noop, attr);
+                    }
+                }
+            }
+        }
     }
 
 };

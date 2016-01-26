@@ -27,11 +27,10 @@ function setPropertyVal(obj, pathes, val, attr) {
     var curObj = obj, propName;
     while (pathes.length !== 0) {
         propName = pathes.shift();
-        curObj = curObj[propName];
-        if (curObj === undefined) {
-            avalon.log('warn', propName, 'is not exist.');
-            return false;
+        if (curObj[propName] === undefined) {            
+            curObj[propName] = {};            
         }
+        curObj = curObj[propName];
     }
     var type = typeof curObj[property];
     curObj[property] = converTo(val, type, attr);
@@ -137,27 +136,28 @@ var validatorFactory = {
 
             var validator = result[validatorName];
             if (!validator) {
-                validator = this._creatorValidator(validatorCreator, aryNames, attr);
+                validator = new Validator();// this._creatorValidator(validatorCreator, aryNames, attr);
+                avalon.mix(validator, validatorCreator())
                 result[validatorName] = validator;
                 validator.vObj = vobj;
-            }
-            else {
-                //validator.attrs[aryNames.pop()] = attr;
-                setPropertyVal(validator, aryNames, attr.value, attr);
-            }
-            validator.init(binding, vobj);
+                validator.init(binding, vobj);
+            }              
+            //validator.attrs[aryNames.pop()] = attr;
+            setPropertyVal(validator, aryNames, attr.value, attr);
         }
-
+        for (var key in result) {
+            result[key].inited(binding, vobj);
+        }
         return result;
-    },
+    }/*,
     _creatorValidator: function (validatorCreator, pathes, attr) { //创建验证其的时候，可以附带一个属性值
         var result = new Validator();
         var setting = validatorCreator();
-        var propName = pathes.length > 0 ? pathes[pathes.length - 1] : false;//看看有没有属性值，如果有就要设置
+        //var propName = pathes.length > 0 ? pathes[pathes.length - 1] : false;//看看有没有属性值，如果有就要设置
         avalon.mix(result, setting);
-        if (propName) {
-            setPropertyVal(result, pathes, attr.value, attr); //恶心的写法啊~~~
-        }
+        //if (propName) {
+        //    setPropertyVal(result, pathes, attr.value, attr); //恶心的写法啊~~~
+        //}
         return result;
-    }
+    }*/
 };
