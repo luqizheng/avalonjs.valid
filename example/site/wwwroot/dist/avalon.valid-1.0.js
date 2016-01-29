@@ -18,7 +18,6 @@ var basic_tag = {
 
 var const_type = 'val';
 var const_prop = '$val';
-
       
     
 function Validator() {
@@ -235,19 +234,21 @@ var _ValidObjSet = {
             ary = binding.expr.split(':'),
             propertyName = ary[ary.length > 1 ? 1 : 0],
             result = null,
-            $id = binding.args[0].$id;
-        if (!vmodel[const_prop]) {
-            vmodel[const_prop] = {
+            $id = binding.args[0].$id,
+            vm$val = vmodel[const_prop]
+            ;
+        if (!vm$val) {
+            vm$val = vmodel[const_prop] = {
                 bindings: {},
                 valid: function () {
-                    var validResult = { _len: 0 }, model = false, callback = avalon.noop, $checkId = false;
+                    var validResult = { _len: 0 }, model = false, callback = avalon.noop, $checkId = false, args = arguments;
                     var summary = true;
-                    if (arguments.length === 1) {
-                        callback = arguments[0];
+                    if (args.length === 1) {
+                        callback = args[0];
                     }
-                    if (arguments.length === 2) {
-                        model = arguments[0];
-                        callback = arguments[1];
+                    if (args.length === 2) {
+                        model = args[0];
+                        callback = args[1];
                     }
 
                     if (model) {
@@ -259,38 +260,33 @@ var _ValidObjSet = {
                             }
                         }
                     }
-                    //checkAll;
-                    if ($checkId) {
-                        for (var key in this.bindings) {
-                            if ($checkId == key) {
-                                validResult[$checkId] = this.bindings[$checkId];
-                                for (var d in validResult[$checkId]) {
-                                    validResult._len++;
-                                }
+
+
+                    for (var key in this.bindings) {
+                        if (!$checkId || $checkId == key) {
+                            validResult[key] = this.bindings[key];
+                            for (var d in validResult[key]) {
+                                validResult._len++;
+                            }
+                            if ($checkId) {
                                 break;
                             }
                         }
                     }
-                    else {
-                        _ValidObjSet._vObjLoop.call(this.bindings, function (compId, propertyName, vObj) {
-                            var c = validResult[compId];
-                            if (!c) {
-                                c = validResult[compId] = {};
+                    for (var key in validResult) {
+                        if (key != "_len") {
+                            for (var prop in validResult[key]) {
+                                var vObj = validResult[key][prop];
+                                vObj.valid(undefined, function (isPass) {
+                                    summary = summary && isPass;
+                                    validResult._len--;
+                                    if (validResult._len == 0 && callback) {
+                                        callback(summary);
+                                    }
+                                });
                             }
-                            c[propertyName] = vObj;
-                            validResult._len++;
-                        })
+                        }
                     }
-
-                    _ValidObjSet._vObjLoop.call(validResult, function (compId, propertyName, vObj) {
-                        vObj.valid(undefined, function (isPass) {
-                            summary = summary && isPass;
-                            validResult._len--;
-                            if (validResult._len == 0 && callback) {
-                                callback(summary);
-                            }
-                        });
-                    });
                 },
                 enable: function (groupName, enabled) {
                     _ValidObjSet._vObjLoop.call(this, function (compId, propertyName, vObj) {
@@ -302,10 +298,9 @@ var _ValidObjSet = {
 
             };
         }
-
-        var comp = vmodel[const_prop]['bindings'][$id];
+        var comp = vm$val.bindings[$id];
         if (!comp) {
-            vmodel[const_prop]['bindings'][$id] = comp = {};
+            vm$val.bindings[$id] = comp = {};
         }
 
         result = comp[propertyName];
@@ -315,14 +310,14 @@ var _ValidObjSet = {
             result.comp = comp;
             result.$compId = $id;
             comp[propertyName] = result;
-            avalon.log('debug', 'created validation obj in .' + const_prop + '.' + $id + '.' + propertyName);
+            //avalon.log('debug', 'created validation obj in .' + const_prop + '.' + $id + '.' + propertyName);
         }
         return result;
     },
     _findVm: function (vmodels) {
-        var result;
+        var result, $proxy = '$proxy';
         avalon.each(vmodels, function (i, v) {
-            if (v.$id.substr(0, '$proxy'.length) === '$proxy') {
+            if (v.$id.substr(0, $proxy.length) === $proxy) {
                 return true;
             }
             result = v;
