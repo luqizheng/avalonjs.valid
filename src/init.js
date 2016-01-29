@@ -27,8 +27,8 @@ function setPropertyVal(obj, pathes, val, attr) {
     var curObj = obj, propName;
     while (pathes.length !== 0) {
         propName = pathes.shift();
-        if (curObj[propName] === undefined) {            
-            curObj[propName] = {};            
+        if (curObj[propName] === undefined) {
+            curObj[propName] = {};
         }
         curObj = curObj[propName];
     }
@@ -48,18 +48,55 @@ var _ValidObjSet = {
             $id = binding.args[0].$id;
         if (!vmodel[const_prop]) {
             vmodel[const_prop] = {
-                valid: function (callback) {
-                    var validResult = [];
+                bindings: {},
+                valid: function () {
+                    var validResult = { _len: 0 }, model = false, callback = avalon.noop, $checkId = false,args=arguments;
                     var summary = true;
-                    _ValidObjSet._vObjLoop.call(this, function (compId, propertyName) {
-                        validResult.push(compId + '.' + propertyName);
-                    });
+                    if (args.length === 1) {
+                        callback = args[0];
+                    }
+                    if (args.length === 2) {
+                        model = args[0];
+                        callback = args[1];
+                    }
 
-                    _ValidObjSet._vObjLoop.call(this, function (compId, propertyName, vObj) {
+                    if (model) {
+                        $checkId = model.$id;
+                        if (model.$ups) {
+                            for (var key in model.$ups) {
+                                $checkId = model.$ups[key].$id
+                                break;
+                            }
+                        }
+                    }
+                    //checkAll;
+                    if ($checkId) {
+                        for (var key in this.bindings) {
+                            if ($checkId == key) {
+                                validResult[$checkId] = this.bindings[$checkId];
+                                for (var d in validResult[$checkId]) {
+                                    validResult._len++;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        _ValidObjSet._vObjLoop.call(this.bindings, function (compId, propertyName, vObj) {
+                            var c = validResult[compId];
+                            if (!c) {
+                                c = validResult[compId] = {};
+                            }
+                            c[propertyName] = vObj;
+                            validResult._len++;
+                        })
+                    }
+
+                    _ValidObjSet._vObjLoop.call(validResult, function (compId, propertyName, vObj) {
                         vObj.valid(undefined, function (isPass) {
                             summary = summary && isPass;
-                            avalon.Array.remove(validResult, this.$compId + '.' + this._propertyName);
-                            if (!validResult.length) {
+                            validResult._len--;
+                            if (validResult._len == 0 && callback) {
                                 callback(summary);
                             }
                         });
@@ -75,9 +112,10 @@ var _ValidObjSet = {
 
             };
         }
-        var comp = vmodel[const_prop][$id];
+
+        var comp = vmodel[const_prop]['bindings'][$id];
         if (!comp) {
-            vmodel[const_prop][$id] = comp = {};
+            vmodel[const_prop]['bindings'][$id] = comp = {};
         }
 
         result = comp[propertyName];
@@ -103,10 +141,8 @@ var _ValidObjSet = {
         return result;
     },
     _vObjLoop: function (action) {
+
         for (var compId in this) {
-            if (compId === 'valid') {
-                continue;
-            }
             for (var propertyName in this[compId]) {
                 action.call(this, compId, propertyName, this[compId][propertyName]);
             }

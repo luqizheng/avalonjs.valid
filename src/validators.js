@@ -165,6 +165,7 @@ avalon[const_type] = {
                 for (var key in this.data) {
                     obj[key] = this.data[key]();
                 }
+                alert(this.url);
                 $.ajax({
                     method: this.method,
                     url: this.url,

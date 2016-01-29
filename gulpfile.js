@@ -9,7 +9,7 @@ var gulp = require("gulp"),
     rename = require("gulp-rename"),
     saveLicense = require("uglify-save-license"),
     tsc = require("gulp-typescript"),
-    gfi = require("gulp-file-insert"),
+    gfi = require("gulp-file-insert"),    
     jshint = require("gulp-jshint");
 
 var version = "1.0" //当前版本号
@@ -65,31 +65,28 @@ function creategulp(bUglify) {
 }
 
 gulp.task('default', ["clean:js"], function () {
-    gulp.run(['avalon', 'avalon:min']);
+    gulp.run(['avalon', 'avalon:min','copyToDemo']);
 });
+
 gulp.task('check', function () {
     return gulp.src("./dist/*.js").pipe(jshint(jsHintOpt))
         .pipe(jshint.reporter('jshint-stylish'))
         .pipe(jshint.reporter('fail'));
 })
+
 gulp.task("clean:js", function (cb) {
     rimraf("dist", cb);
 });
 
 gulp.task("avalon:min", function (cb) {
-    //avalon    
-    /*return gulp.src("./src/avalon.valid.js")
-        .pipe(concat("avalon.valid.js"))
-        .pipe(gfi(gulpInsert))
-        .pipe(rename({
-            suffix: '-' + version + '.min'
-        }))
-        .pipe(uglify({output:{comments:saveLicense }}))
-        .pipe(gulp.dest('dist'));*/
     return creategulp(true);
 })
 gulp.task("avalon", function (cb) {
     return creategulp(false);
+})
+gulp.task("copyToDemo",['avalon','avalon:min'] ,function (cb) {
+    return gulp.src("./dist/*.*")
+        .pipe(gulp.dest("./example/site/wwwroot/dist"));
 })
 
 gulp.task('watch', function () {
