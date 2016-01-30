@@ -17,7 +17,8 @@ function compare(func, errorFunc) {
                 val2 = valFunc.getValue();
             func(val1, val2, cb)
         },
-        error: function (vObj) {
+        error: function () {
+            var vObj = this.vObj;
             var self = this, selfName = vObj.name || vObj._propertyName,
                 compareTarget = self.vObj.comp[self.compare],
                 compareText = compareTarget ? (compareTarget.name || compareTarget._propertyName) : (self.compare || self.value());
@@ -60,7 +61,12 @@ avalon[const_type] = {
     required: function () {
         return {
             func: function (value, cb) {
-                cb(value !== null && value !== '');
+                if (isArray(value)) {
+                    cb(value.length != 0)
+                }
+                else {
+                    cb(value !== null && value !== '');
+                }
             },
             error: function () {
                 return '请输入[vObj.name]';
@@ -181,7 +187,7 @@ avalon[const_type] = {
                     var attr = binding.element.attributes[i];
                     if (/val-ajax-data-.+/i.test(attr.name)) {
                         var pathes = attr.name.substr('val-ajax-data-'.length).split('-');
-                        setPropertyVal(self.data, pathes, avalon.noop, attr);
+                        setPropertyVal(self.data, pathes, avalon.noop, attr, self.vObj);
                     }
                 }
             }

@@ -5,18 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-   <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css">
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-theme.css">
     <script src="lib/jquery-1.11.3.min.js"></script>
     <script src="lib/avalon.js"></script>
-    <script src="dist/avalon.valid-1.0.js"></script>    
+    <script src="dist/avalon.valid-1.0.js"></script>
 
     <style>
         .has-error-s {
             background-color: #cfcfcf;
         }
-        body{
-            background-color:#E2E2E2
+        
+        body {
+            background-color: #E2E2E2
         }
     </style>
 </head>
@@ -24,8 +25,9 @@
 <body>
     <div class="container">
         <div class="row">
-            <div class="col-md-12">
-                <div class="panel" ms-controller="changePassword">
+            
+            <div class="col-md-5">
+                <div class="panel" ms-controller="changePassword11111111111">
                     <div class="panel-title">
                         <h3>修改密码</h3>
                     </div>
@@ -64,33 +66,32 @@
                         </form>
                     </div>
                 </div>
+
             </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="panel-title">
-                        标签说明
-                    </div>
-                    <div class="panel-body">
-                        基本标签
-                        <ul>
-                            <li>ms-val="XXX" 验证这个对象。后面再说验证器</li>
-                            <li>ms-val-display="xxx" 从这个标签输出结果，可以用 ms-val-display-error输出错误结果，或者 ms-val-display-success 输出验证通过结果</li>
-                            <li>ms-val-class-error/success， 必须带有 success/error ，例如 ms-val-class-success = "className:propName"</li>
-                        </ul>
-                        
-                        <h3>使用验证器</h3>
-                        
-                        <p>
-                            在 ms-val="prop" 所在的标签下， 用ms-val-required 就是使用 使用required这个验证器， ms-val-required-error="验证出错的说明"
-                            
-                        </p>
-                        
-                    </div>
+            <div class="col-md-5">
+                <div class="panel-title">
+                    标签说明
+                </div>
+                <div class="panel-body">
+                    基本标签
+                    <ul>
+                        <li>ms-val="XXX" 验证这个对象。后面再说验证器</li>
+                        <li>ms-val-display="xxx" 从这个标签输出结果，可以用 ms-val-display-error输出错误结果，或者 ms-val-display-success 输出验证通过结果</li>
+                        <li>ms-val-class-error/success， 必须带有 success/error ，例如 ms-val-class-success = "className:propName"</li>
+                    </ul>
+
+                    <h3>使用验证器</h3>
+
+                    <p>
+                        在 ms-val="prop" 所在的标签下， 用ms-val-required 就是使用 使用required这个验证器， ms-val-required-error="验证出错的说明"
+
+                    </p>
+
                 </div>
             </div>
         </div>
         <script>
-            var vm1 = avalon.define({
+           /* var vm1 = avalon.define({
                 $id: "changePassword",
                 model:{
                     newPassword: "",
@@ -109,40 +110,50 @@
                 }
                 
                 
-            });
+            });*/
         </script>
-    </div>
-    <!--
         <div class="row">
-            <div class="col-md-5" ms-controller="numberTest">
-                <form action="#">
-                    <div class="form-group" ms-val-class-error="has-error:number" ms-val-class-error-1="has-error-s:number">
-                        <label class="control-label">数值</label>
-                        <input class="form-control" type="number" ms-val-required="number" data-val-required-error="请输入数值" ms-duplex-number="number"
-                        ms-val-range="number" data-val-range-error="数值必须在[min]和[max]之间" data-val-range-min="6" data-val-range-max="15"></input>
-                        <span class="help-block" ms-val-display="number"></span>
-                    </div>
-                    <div class="col-md-12">
-                        <input type="button" value="submit" ms-click="submit">
-                    </div>
 
-                </form>
+
+
+            <div class="col-md-5" ms-controller="numberTest">
+                <div class="panel">
+                    <div class="panel-title">disabled:{{disabled}}</div>
+                    <div class="panel-body">
+                        <form action="#">
+                            <div class="form-group" ms-val-class-error="has-error:number" ms-val-class-error-1="has-error-s:number">
+                                <label class="control-label">数值</label>
+                                <input class="form-control" type="number" ms-val="number" val-required="number" val-required-error="请输入数值" ms-duplex-number="number"
+                                val-range="number" val-range-error="数值必须在[min]和[max]之间" val-range-min="6" val-range-max="15"
+                                ms-attr-val-disabled="disabled"></input>
+                                <span class="help-block" ms-val-display="number"></span>
+                            </div>
+                            <label>关闭验证
+                                <input type="checkbox" ms-duplex-checked='disabled'>
+                            </label>
+                            <div class="col-md-12">
+                                <input type="button" value="submit" ms-click="submit">
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class=col-md-5>
-            </div>
+            <div class=col-md-5></div>
 
             <script>
                 var numberTest = avalon.define({
                 $id: "numberTest",
                 number: 3,
+                disabled:false,                
                 submit:function(){
-                    console.log(typeof numberTest.number)
+                    numberTest.$val(function(ispass){
+                        alert(ispass);
+                    })
                 }
             });
             </script>
         </div>
-
--->
     </div>
 
 </body>

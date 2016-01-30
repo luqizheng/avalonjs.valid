@@ -1,7 +1,7 @@
 /// <reference path='init.js' />
 /// <reference path='Validator.js' />
 /// <reference path='../lib/avalon.js' /> 
-function ValidObj(name) {
+function ValidObj(name, binding) {
     'use strict';
     this.validating = false;//中间状态，验证ing，    
     this.success = '';
@@ -10,11 +10,9 @@ function ValidObj(name) {
     this.validators = [];
     this.classBindings = [];//bidng of class.
     this.displayBindings = [];//bind of display   
-    this.binding = null; //binding of avalon.
-    this.enabled = true;
-    this.group = "";
-
-
+    this.binding = binding; //binding of avalon.        
+    this.disabled = getAttrVal('val-disabled', this);
+    this.group = getAttrVal('val-group',this);
     this._isFristVal = true; //是否为第一次验证，如果是，无论值是否相同都要执行。
     this.output = function () {
         //已经知道结果了。
@@ -36,7 +34,7 @@ function ValidObj(name) {
                 case 'error':
                     msg = !isPass ? self.error : '';
                     break;
-            }         
+            }
             avalon.innerHTML(binding.element, msg);
         });
     };
@@ -61,7 +59,9 @@ function ValidObj(name) {
     this.valid = function (newValue, callback) {
 
         var self = this;
-        if (!self.enabled) {
+        if (self.disabled()) {
+            self.success = '';
+            self.output();
             return;
         }
         if (newValue === undefined) {
@@ -102,7 +102,7 @@ function ValidObj(name) {
                         _validQueue(); //成功继续验证。
                     }
                     else {
-                        var msg = validator.error(self);
+                        var msg = validator.error();
                         self.error = formatMessage(msg, validator, self);
                         queue.pop()();
                     }
@@ -122,7 +122,7 @@ function ValidObj(name) {
     this.toString = function () {
         return this._propertyName;
     }
-    this.isPass = function () { return !this.enabled || this.error === ''; };
+    this.isPass = function () { return this.disabled() || this.error === ''; };
     this.notifyValidators = []; //如果值发生变动，那么需要通知的其他binding
     
     this.notify = function () {

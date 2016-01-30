@@ -18,6 +18,9 @@ var basic_tag = {
 
 var const_type = 'val';
 var const_prop = '$val';
+function isArray(obj) {   
+  return Object.prototype.toString.call(obj) === '[object Array]';    
+}  
       
     
 function Validator() {
@@ -32,7 +35,7 @@ function Validator() {
     /// <reference path='init.js' />
 /// <reference path='Validator.js' />
 /// <reference path='../lib/avalon.js' /> 
-function ValidObj(name) {
+function ValidObj(name, binding) {
     'use strict';
     this.validating = false;//中间状态，验证ing，    
     this.success = '';
@@ -41,11 +44,9 @@ function ValidObj(name) {
     this.validators = [];
     this.classBindings = [];//bidng of class.
     this.displayBindings = [];//bind of display   
-    this.binding = null; //binding of avalon.
-    this.enabled = true;
+    this.binding = binding; //binding of avalon.        
+    this.disabled = getAttrVal('val-disabled', this);
     this.group = "";
-
-
     this._isFristVal = true; //是否为第一次验证，如果是，无论值是否相同都要执行。
     this.output = function () {
         //已经知道结果了。
@@ -67,7 +68,7 @@ function ValidObj(name) {
                 case 'error':
                     msg = !isPass ? self.error : '';
                     break;
-            }         
+            }
             avalon.innerHTML(binding.element, msg);
         });
     };
@@ -92,7 +93,9 @@ function ValidObj(name) {
     this.valid = function (newValue, callback) {
 
         var self = this;
-        if (!self.enabled) {
+        if (self.disabled()) {
+            self.success = '';
+            self.output();
             return;
         }
         if (newValue === undefined) {
@@ -133,7 +136,7 @@ function ValidObj(name) {
                         _validQueue(); //成功继续验证。
                     }
                     else {
-                        var msg = validator.error(self);
+                        var msg = validator.error();
                         self.error = formatMessage(msg, validator, self);
                         queue.pop()();
                     }
@@ -153,7 +156,7 @@ function ValidObj(name) {
     this.toString = function () {
         return this._propertyName;
     }
-    this.isPass = function () { return !this.enabled || this.error === ''; };
+    this.isPass = function () { return this.disabled() || this.error === ''; };
     this.notifyValidators = []; //如果值发生变动，那么需要通知的其他binding
     
     this.notify = function () {
@@ -190,13 +193,25 @@ function ValidObj(name) {
     /// <reference path='validator.js' />
 /// <reference path='const.js' />
 'use strict';
-function getAttrVal(attr) {
-    return function () {
-        var at = attr;
-        return at.value;
+function getAttrVal(name, vObj) {
+    return function (val) {
+        var _name = name;
+        var _binding = vObj.binding;
+        var attr = _binding.element.attributes[_name];
+        var _inner = false;
+        if (val === undefined) {
+            if (attr)
+                return attr.value;
+            return _inner;
+        }
+        else {
+            if (attr){
+                attr.value = val;}
+            _inner = val;
+        }
     }
 }
-function converTo(strValue, type, attr) {
+function converTo(strValue, type, attr, vObj) {
     switch (type) {
         case 'number':
             strValue = parseFloat(strValue);
@@ -205,14 +220,15 @@ function converTo(strValue, type, attr) {
             strValue = strValue.toCaseLower() === 'true';
             break;
         case 'function': //如果原来的property是function，那么就是改为方法 都attr，面对的场景是val-required-error 这类型标签        
-            strValue = getAttrVal(attr);
+            strValue = getAttrVal(attr.name, vObj);
             break;
     }
     return strValue;
 }
 
-function setPropertyVal(obj, pathes, val, attr) {
+function setPropertyVal(obj, pathes, attr, vObj) {
     var property = pathes.pop();
+    var val = attr.value;
     var curObj = obj, propName;
     while (pathes.length !== 0) {
         propName = pathes.shift();
@@ -222,7 +238,7 @@ function setPropertyVal(obj, pathes, val, attr) {
         curObj = curObj[propName];
     }
     var type = typeof curObj[property];
-    curObj[property] = converTo(val, type, attr);
+    curObj[property] = converTo(val, type, attr,vObj);
     //avalon.log('debug', property, '=', curObj[property]);
 }
 
@@ -291,7 +307,7 @@ var _ValidObjSet = {
                 enable: function (groupName, enabled) {
                     _ValidObjSet._vObjLoop.call(this, function (compId, propertyName, vObj) {
                         if (vObj.group == groupName) {
-                            vObj.enabled = enabled;
+                            vObj.disabled(!enabled);
                         }
                     })
                 }
@@ -305,7 +321,7 @@ var _ValidObjSet = {
 
         result = comp[propertyName];
         if (!result) {
-            result = new ValidObj(propertyName);
+            result = new ValidObj(propertyName,binding);
             result.binding = binding;
             result.comp = comp;
             result.$compId = $id;
@@ -324,14 +340,6 @@ var _ValidObjSet = {
             return false;
         });
         return result;
-    },
-    _vObjLoop: function (action) {
-
-        for (var compId in this) {
-            for (var propertyName in this[compId]) {
-                action.call(this, compId, propertyName, this[compId][propertyName]);
-            }
-        }
     }
 };
 
@@ -351,7 +359,7 @@ var validatorFactory = {
                 //如果不是验证器，那么就是vobj的属性
                 //avalon.log('warn', 'can't find', validatorName, ' defined. so add it to vali')
                 aryNames = [validatorName].concat(aryNames);
-                setPropertyVal(vobj, aryNames, attr.value); //set验证对象
+                setPropertyVal(vobj, aryNames, attr, vobj); //set验证对象
                 continue;
             }
 
@@ -364,23 +372,13 @@ var validatorFactory = {
                 validator.init(binding, vobj);
             }              
             //validator.attrs[aryNames.pop()] = attr;
-            setPropertyVal(validator, aryNames, attr.value, attr);
+            setPropertyVal(validator, aryNames, attr, vobj);
         }
         for (var key in result) {
             result[key].inited(binding, vobj);
         }
         return result;
-    }/*,
-    _creatorValidator: function (validatorCreator, pathes, attr) { //创建验证其的时候，可以附带一个属性值
-        var result = new Validator();
-        var setting = validatorCreator();
-        //var propName = pathes.length > 0 ? pathes[pathes.length - 1] : false;//看看有没有属性值，如果有就要设置
-        avalon.mix(result, setting);
-        //if (propName) {
-        //    setPropertyVal(result, pathes, attr.value, attr); //恶心的写法啊~~~
-        //}
-        return result;
-    }*/
+    }
 };
 
     var initHandler = {
@@ -388,7 +386,7 @@ var validatorFactory = {
             //binding.type = 'class'//强制改为class;            
             var ary = binding.expr.split(':');
             if (ary.length < 2) {
-                avalon.log('error', binding.expr + '必须是', binding.expr,'="className:bindName 这种格式');
+                avalon.log('error', binding.expr + '必须是', binding.expr, '="className:bindName 这种格式');
                 //throw new Exception(binding.expr + ' 必须是 className:bindgName');
             }
             var newValue = ary[1]; //ary[1] + ':' + const_prop + '.' + ary[0] + '.' + info.param;            
@@ -430,7 +428,7 @@ var validatorFactory = {
                     };
                 avalon(elem).bind('blur', bCheck);
                 binding.roolback = function () {
-                    avalon(elem).unbind('blur', bCheck);                    
+                    avalon(elem).unbind('blur', bCheck);
                 };
             }
         },
@@ -442,6 +440,7 @@ var validatorFactory = {
                 var basicType = getTagType(binding.name);
                 if (basicType === basic_tag.val) {
                     vObj.validators = validatorFactory.create(binding, vObj);
+                    vObj.binding = this;
                     return;
                 }
                 else if (basicType === basic_tag.class) {
@@ -482,7 +481,8 @@ function compare(func, errorFunc) {
                 val2 = valFunc.getValue();
             func(val1, val2, cb)
         },
-        error: function (vObj) {
+        error: function () {
+            var vObj = this.vObj;
             var self = this, selfName = vObj.name || vObj._propertyName,
                 compareTarget = self.vObj.comp[self.compare],
                 compareText = compareTarget ? (compareTarget.name || compareTarget._propertyName) : (self.compare || self.value());
@@ -525,7 +525,12 @@ avalon[const_type] = {
     required: function () {
         return {
             func: function (value, cb) {
-                cb(value !== null && value !== '');
+                if (isArray(value)) {
+                    cb(value.length != 0)
+                }
+                else {
+                    cb(value !== null && value !== '');
+                }
             },
             error: function () {
                 return '请输入[vObj.name]';
@@ -646,7 +651,7 @@ avalon[const_type] = {
                     var attr = binding.element.attributes[i];
                     if (/val-ajax-data-.+/i.test(attr.name)) {
                         var pathes = attr.name.substr('val-ajax-data-'.length).split('-');
-                        setPropertyVal(self.data, pathes, avalon.noop, attr);
+                        setPropertyVal(self.data, pathes, avalon.noop, attr, self.vObj);
                     }
                 }
             }

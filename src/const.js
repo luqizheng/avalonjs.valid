@@ -7,3 +7,6 @@ var basic_tag = {
 
 var const_type = 'val';
 var const_prop = '$val';
+function isArray(obj) {   
+  return Object.prototype.toString.call(obj) === '[object Array]';    
+}  

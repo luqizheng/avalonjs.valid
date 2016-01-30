@@ -19,7 +19,7 @@
             //binding.type = 'class'//强制改为class;            
             var ary = binding.expr.split(':');
             if (ary.length < 2) {
-                avalon.log('error', binding.expr + '必须是', binding.expr,'="className:bindName 这种格式');
+                avalon.log('error', binding.expr + '必须是', binding.expr, '="className:bindName 这种格式');
                 //throw new Exception(binding.expr + ' 必须是 className:bindgName');
             }
             var newValue = ary[1]; //ary[1] + ':' + const_prop + '.' + ary[0] + '.' + info.param;            
@@ -61,7 +61,7 @@
                     };
                 avalon(elem).bind('blur', bCheck);
                 binding.roolback = function () {
-                    avalon(elem).unbind('blur', bCheck);                    
+                    avalon(elem).unbind('blur', bCheck);
                 };
             }
         },
@@ -73,6 +73,7 @@
                 var basicType = getTagType(binding.name);
                 if (basicType === basic_tag.val) {
                     vObj.validators = validatorFactory.create(binding, vObj);
+                    vObj.binding = this;
                     return;
                 }
                 else if (basicType === basic_tag.class) {
