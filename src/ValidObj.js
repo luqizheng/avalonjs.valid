@@ -10,10 +10,10 @@ function ValidObj(name, binding) {
     this.validators = [];
     this.classBindings = [];//bidng of class.
     this.displayBindings = [];//bind of display   
-    this.binding = binding; //binding of avalon.        
+    this.binding = binding; //binding of avalon. ms-val="XX"     
     this.disabled = getAttrVal('val-disabled', this);
-    this.group = getAttrVal('val-group',this);
-    this._isFristVal = true; //是否为第一次验证，如果是，无论值是否相同都要执行。
+    this.group = getAttrVal('val-group', this);
+    this._isFirstVal = true; //是否为第一次验证，如果是，无论值是否相同都要执行。
     this.output = function () {
         //已经知道结果了。
         var self = this;
@@ -43,7 +43,7 @@ function ValidObj(name, binding) {
         return binding.getter ? binding.getter.apply(0, binding.args) : binding.oldValue;
     };
     this.isSameValue = function (newValue) {
-        if (this._isFristVal) {
+        if (this._isFirstVal) {
             this._isFirstVal = false;
             return false;
         }
@@ -56,12 +56,20 @@ function ValidObj(name, binding) {
         }
         return newValue && newValue === binding.oldValue; //如果新值为空，那么就需要验证其验证。否则跳过。         
     };
+
     this.valid = function (newValue, callback) {
+
+        function cal_cb() {
+            if (avalon.isFunction(callback)) {
+                callback.call(self, self.isPass());
+            }
+        }
 
         var self = this;
         if (self.disabled()) {
             self.success = '';
             self.output();
+            cal_cb();
             return;
         }
         if (newValue === undefined) {
@@ -70,9 +78,7 @@ function ValidObj(name, binding) {
         if (this.isSameValue(newValue)) { //没有enable，那么直接验证就可以了。
             //newValue没有输入，那么检查binding是否带有getter，如果有证明值已经更改过但是还没有获取到
             //那么不需要检查.直接将上一次的结果返回就可以了。
-            if (avalon.isFunction(callback)) {
-                callback.call(self, self.isPass());
-            }
+            cal_cb();
             return;
         }
 
@@ -88,9 +94,7 @@ function ValidObj(name, binding) {
         queue.push(function () {
             self.validating = false;
             self.output();
-            if (callback) {
-                callback.call(self, self.isPass());
-            }
+            cal_cb();
         });
 
         function _validQueue() {

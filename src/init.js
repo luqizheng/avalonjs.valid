@@ -90,7 +90,8 @@ var _ValidObjSet = {
                         if (!$checkId || $checkId == key) {
                             validResult[key] = this.bindings[key];
                             for (var d in validResult[key]) {
-                                validResult._len++;
+                                if(d!=="_len");                                
+                                    validResult._len++;
                             }
                             if ($checkId) {
                                 break;
