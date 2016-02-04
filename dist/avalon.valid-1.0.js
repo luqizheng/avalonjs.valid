@@ -27,8 +27,8 @@ function Validator() {
     this.error = function (attr) { return '输入错误请纠正'; };
     this.async = false; //async validator, if you use ajax in the this.func, please set it to true.
     this.func = false;//function (value,callback) {}
-    this.init = avalon.noop;
-    this.inited = avalon.noop; 
+    this.init = avalon.noop; //刚刚创建Validator的时候
+    this.inited = avalon.noop; //初始化接
 }
 
     
@@ -53,13 +53,13 @@ function ValidObj(name, binding) {
         var self = this;
         var isPass = this.isPass();
         avalon.each(self.classBindings, function (i, binding) {
-            var properName = binding.name.split('-').pop();
+            var properName = getPropName(binding);
             var showOrNot = properName === 'success' ? isPass : !isPass;
             avalon(binding.element).toggleClass(binding.clz, showOrNot);
         });       
         //output 信息        
         avalon.each(self.displayBindings, function (i, binding) {
-            var properName = binding.name.split('-').pop();
+            var properName = getPropName(binding);
             var msg = isPass ? self.success : self.error;
             switch (properName) {
                 case 'success':
@@ -187,9 +187,18 @@ function ValidObj(name, binding) {
         });
         return content;
     };
-
 }
 
+
+function getPropName(binding) {
+    var ary = binding.name.split('-')
+    var propName = ary.pop();
+    if (/^\d/.test(propName)) {
+        return ary.pop();
+    }
+    return propName;
+
+}
 
 
 
@@ -198,21 +207,22 @@ function ValidObj(name, binding) {
 /// <reference path='const.js' />
 'use strict';
 function getAttrVal(name, vObj) {
-    return function (val) {
+    
+    return function (val,inner) {
         var _name = name;
         var _binding = vObj.binding;
         var attr = _binding.element.attributes[_name];
-        var _inner = false;
         if (val === undefined) {
             if (attr)
                 return attr.value;
-            return _inner;
+            return (typeof _inner==='undefined')?false:_inner;
         }
         else {
             if (attr){
                 attr.value = val;}
             _inner = val;
         }
+        
     }
 }
 function converTo(strValue, type, attr, vObj) {
@@ -222,7 +232,7 @@ function converTo(strValue, type, attr, vObj) {
             break;
         case 'booleam':
             strValue = strValue.toCaseLower() === 'true';
-            break;
+            break;        
         case 'function': //如果原来的property是function，那么就是改为方法 都attr，面对的场景是val-required-error 这类型标签        
             strValue = getAttrVal(attr.name, vObj);
             break;
@@ -230,9 +240,9 @@ function converTo(strValue, type, attr, vObj) {
     return strValue;
 }
 
-function setPropertyVal(obj, pathes, attr, vObj) {
+function setPropertyVal(obj, pathes, attr, vObj,value) {
     var property = pathes.pop();
-    var val = attr.value;
+    var val = value || attr.value;
     var curObj = obj, propName;
     while (pathes.length !== 0) {
         propName = pathes.shift();
@@ -242,6 +252,9 @@ function setPropertyVal(obj, pathes, attr, vObj) {
         curObj = curObj[propName];
     }
     var type = typeof curObj[property];
+    if(type=='undefined'){
+        type=typeof val;
+    }
     curObj[property] = converTo(val, type, attr,vObj);
     //avalon.log('debug', property, '=', curObj[property]);
 }
@@ -310,11 +323,20 @@ var _ValidObjSet = {
                     }
                 },
                 enable: function (groupName, enabled) {
-                    _ValidObjSet._vObjLoop.call(this, function (compId, propertyName, vObj) {
-                        if (vObj.group == groupName) {
-                            vObj.disabled(!enabled);
-                        }
-                    })
+                    if(enabled===undefined)
+                    {
+                        enabled=groupName;
+                        groupName=false;
+                    }
+                     for (var key in this.bindings) {
+                         var binding=this.bindings[key];
+                         for(var prop in binding){
+                             var vObj=binding[prop]
+                             if (groupName===false || vObj.group == groupName) {
+                                    vObj.disabled(!enabled);
+                             }
+                         }
+                     }                    
                 }
 
             };
@@ -640,7 +662,7 @@ avalon[const_type] = {
                 for (var key in this.data) {
                     obj[key] = this.data[key]();
                 }
-                alert(this.url);
+                                 
                 $.ajax({
                     method: this.method,
                     url: this.url,
@@ -656,7 +678,7 @@ avalon[const_type] = {
                     var attr = binding.element.attributes[i];
                     if (/val-ajax-data-.+/i.test(attr.name)) {
                         var pathes = attr.name.substr('val-ajax-data-'.length).split('-');
-                        setPropertyVal(self.data, pathes, avalon.noop, attr, self.vObj);
+                        setPropertyVal(self.data, pathes, attr, self.vObj,avalon.noop);
                     }
                 }
             }

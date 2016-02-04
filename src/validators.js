@@ -171,7 +171,7 @@ avalon[const_type] = {
                 for (var key in this.data) {
                     obj[key] = this.data[key]();
                 }
-                alert(this.url);
+                                 
                 $.ajax({
                     method: this.method,
                     url: this.url,
@@ -187,7 +187,7 @@ avalon[const_type] = {
                     var attr = binding.element.attributes[i];
                     if (/val-ajax-data-.+/i.test(attr.name)) {
                         var pathes = attr.name.substr('val-ajax-data-'.length).split('-');
-                        setPropertyVal(self.data, pathes, avalon.noop, attr, self.vObj);
+                        setPropertyVal(self.data, pathes, attr, self.vObj,avalon.noop);
                     }
                 }
             }

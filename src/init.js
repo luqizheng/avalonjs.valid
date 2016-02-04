@@ -2,21 +2,22 @@
 /// <reference path='const.js' />
 'use strict';
 function getAttrVal(name, vObj) {
+    
     return function (val) {
         var _name = name;
         var _binding = vObj.binding;
         var attr = _binding.element.attributes[_name];
-        var _inner = false;
         if (val === undefined) {
             if (attr)
                 return attr.value;
-            return _inner;
+            return (typeof _inner==='undefined')?false:_inner;
         }
         else {
             if (attr){
                 attr.value = val;}
             _inner = val;
         }
+        
     }
 }
 function converTo(strValue, type, attr, vObj) {
@@ -26,7 +27,7 @@ function converTo(strValue, type, attr, vObj) {
             break;
         case 'booleam':
             strValue = strValue.toCaseLower() === 'true';
-            break;
+            break;        
         case 'function': //如果原来的property是function，那么就是改为方法 都attr，面对的场景是val-required-error 这类型标签        
             strValue = getAttrVal(attr.name, vObj);
             break;
@@ -34,9 +35,9 @@ function converTo(strValue, type, attr, vObj) {
     return strValue;
 }
 
-function setPropertyVal(obj, pathes, attr, vObj) {
+function setPropertyVal(obj, pathes, attr, vObj,value) {
     var property = pathes.pop();
-    var val = attr.value;
+    var val = value || attr.value;
     var curObj = obj, propName;
     while (pathes.length !== 0) {
         propName = pathes.shift();
@@ -46,6 +47,9 @@ function setPropertyVal(obj, pathes, attr, vObj) {
         curObj = curObj[propName];
     }
     var type = typeof curObj[property];
+    if(type=='undefined'){
+        type=typeof val;
+    }
     curObj[property] = converTo(val, type, attr,vObj);
     //avalon.log('debug', property, '=', curObj[property]);
 }
@@ -114,11 +118,20 @@ var _ValidObjSet = {
                     }
                 },
                 enable: function (groupName, enabled) {
-                    _ValidObjSet._vObjLoop.call(this, function (compId, propertyName, vObj) {
-                        if (vObj.group == groupName) {
-                            vObj.disabled(!enabled);
-                        }
-                    })
+                    if(enabled===undefined)
+                    {
+                        enabled=groupName;
+                        groupName=false;
+                    }
+                     for (var key in this.bindings) {
+                         var binding=this.bindings[key];
+                         for(var prop in binding){
+                             var vObj=binding[prop]
+                             if (groupName===false || vObj.group == groupName) {
+                                    vObj.disabled(!enabled);
+                             }
+                         }
+                     }                    
                 }
 
             };

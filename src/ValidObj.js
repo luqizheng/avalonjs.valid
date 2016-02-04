@@ -19,13 +19,13 @@ function ValidObj(name, binding) {
         var self = this;
         var isPass = this.isPass();
         avalon.each(self.classBindings, function (i, binding) {
-            var properName = binding.name.split('-').pop();
+            var properName = getPropName(binding);
             var showOrNot = properName === 'success' ? isPass : !isPass;
             avalon(binding.element).toggleClass(binding.clz, showOrNot);
         });       
         //output 信息        
         avalon.each(self.displayBindings, function (i, binding) {
-            var properName = binding.name.split('-').pop();
+            var properName = getPropName(binding);
             var msg = isPass ? self.success : self.error;
             switch (properName) {
                 case 'success':
@@ -153,8 +153,17 @@ function ValidObj(name, binding) {
         });
         return content;
     };
-
 }
 
+
+function getPropName(binding) {
+    var ary = binding.name.split('-')
+    var propName = ary.pop();
+    if (/^\d/.test(propName)) {
+        return ary.pop();
+    }
+    return propName;
+
+}
 
 
