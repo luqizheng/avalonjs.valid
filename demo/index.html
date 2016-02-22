@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-theme.css">
     <script src="lib/jquery-1.11.3.min.js"></script>
     <script src="lib/avalon.js"></script>
+    
     <script src="dist/avalon.valid-1.0.js"></script>
 
     <style>
@@ -111,6 +112,9 @@
             });
         </script>
         <div class="row">
+
+
+
             <div class="col-md-5" ms-controller="numberTest">
                 <div class="panel">
                     <div class="panel-title">disabled:{{disabled}}</div>
@@ -150,17 +154,17 @@
             </script>
         </div>
 
-        <!-------------- 公用一个 error-------------------------->
         <div class="row">
             <div class="col-md-5" ms-controller="requireMulti">
                 <div class="panel">
-                    <div class="panel-title">disabled:{{disabled}}</div>
+                    <div class="panel-title">公用一套ms                        
+                    </div>
                     <div class="panel-body">
                         <form action="#">
                             <div class="form-group" ms-val-class-error="has-error:text1" ms-val-class-error-1="has-error:text2">
                                 <label class="control-label">text1</label>
-                                <input class="form-control" type="text" ms-val="text1" val-required="text1"></input>
-                                <input class="form-control" type="text" ms-val="text2" val-required="text2"></input>
+                                <input class="form-control" type="text" ms-duplex="text1" ms-val="text1" val-required="text1"></input>
+                                <input class="form-control" type="text" ms-duplex="text2" ms-val="text2" val-required="text2"></input>
                                 <span class="help-block" ms-val-display="text1" ms-val-display="text2"></span>
                                 <div class="col-md-12">
                                     <input type="button" value="submit" ms-click="submit">
@@ -176,7 +180,7 @@
                     var requireMulti = avalon.define({
                         $id: "requireMulti",
                         text1: "text1",
-                        text2: "text2",
+                        text2: "",
                         submit: function () {
                             requireMulti.$val.valid(function (ispass) {
                                 alert(ispass);
@@ -186,6 +190,10 @@
                 </script>
             </div>
         </div>
+
+
+
+    </div>
 
 </body>
 

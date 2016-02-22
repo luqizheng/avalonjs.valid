@@ -1,15 +1,31 @@
-/*!
-avalon.valid Copyright(c) 2011 Leo.lu  MIT Licensed
-https://github.com/luqizheng/avalon.valid.js 
-*/
+!function (factory) { //http://chen.junchang.blog.163.com/blog/static/6344519201312514327466/
 
-/// <reference path="init.js" />
-/// <reference path="const.js" />
-(function (avalon) {
+    //factory是一个函数，下面的koExports就是他的参数
 
-    'use strict';   
-    
-    
+    // Support three module loading scenarios
+    if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
+        // [1] CommonJS/Node.js
+        // [1] 支持在module.exports.abc,或者直接exports.abc
+        //var target = module['exports'] || exports; // module.exports is for Node.js
+        //var avalon = require("avalon");
+        //factory(avalon);
+        define(function(){
+            factory(require("avalon"));
+        })
+    } else if (typeof define === 'function' && define['amd']) {
+        // [2] AMD anonymous module
+        // [2] AMD 规范 
+        //define(['exports'],function(exports){
+        //    exports.abc = function(){}
+        //});
+        define(['avalon'], factory);
+    } else {
+        // [3] No module loader (plain <script> tag) - put directly in global namespace
+        factory(window['avalon']);
+    }
+} (function (avalon) {
+    alert('ok')
+     
 var basic_tag = {    
     class: 'ms-val-class',
     display: 'ms-val-display',
@@ -53,9 +69,10 @@ function ValidObj(name, binding) {
         var self = this;
         var isPass = this.isPass();
         avalon.each(self.classBindings, function (i, binding) {
+            var $ele=avalon(binding.element)
             var properName = getPropName(binding);
-            var showOrNot = properName === 'success' ? isPass : !isPass;
-            avalon(binding.element).toggleClass(binding.clz, showOrNot);
+            var showOrNot = properName === 'success' ? isPass : !isPass;            
+            $ele.toggleClass(binding.clz, showOrNot);            
         });       
         //output 信息        
         avalon.each(self.displayBindings, function (i, binding) {
@@ -72,6 +89,14 @@ function ValidObj(name, binding) {
             avalon.innerHTML(binding.element, msg);
         });
     };
+    this.reset = function () {
+        avalon.each(self.classBindings, function (i, binding) {
+            avalon(binding.element).toggleClass(binding.clz, false);
+        });
+        avalon.each(self.displayBindings, function (i, binding) {
+            avalon.innerHTML(binding.element, "");
+        });
+    }
     this.getValue = function () {
         var binding = this.binding;
         return binding.getter ? binding.getter.apply(0, binding.args) : binding.oldValue;
@@ -205,59 +230,8 @@ function getPropName(binding) {
         
     /// <reference path='validator.js' />
 /// <reference path='const.js' />
-'use strict';
-function getAttrVal(name, vObj) {
-    
-    return function (val,inner) {
-        var _name = name;
-        var _binding = vObj.binding;
-        var attr = _binding.element.attributes[_name];
-        if (val === undefined) {
-            if (attr)
-                return attr.value;
-            return (typeof _inner==='undefined')?false:_inner;
-        }
-        else {
-            if (attr){
-                attr.value = val;}
-            _inner = val;
-        }
-        
-    }
-}
-function converTo(strValue, type, attr, vObj) {
-    switch (type) {
-        case 'number':
-            strValue = parseFloat(strValue);
-            break;
-        case 'booleam':
-            strValue = strValue.toCaseLower() === 'true';
-            break;        
-        case 'function': //如果原来的property是function，那么就是改为方法 都attr，面对的场景是val-required-error 这类型标签        
-            strValue = getAttrVal(attr.name, vObj);
-            break;
-    }
-    return strValue;
-}
 
-function setPropertyVal(obj, pathes, attr, vObj,value) {
-    var property = pathes.pop();
-    var val = value || attr.value;
-    var curObj = obj, propName;
-    while (pathes.length !== 0) {
-        propName = pathes.shift();
-        if (curObj[propName] === undefined) {
-            curObj[propName] = {};
-        }
-        curObj = curObj[propName];
-    }
-    var type = typeof curObj[property];
-    if(type=='undefined'){
-        type=typeof val;
-    }
-    curObj[property] = converTo(val, type, attr,vObj);
-    //avalon.log('debug', property, '=', curObj[property]);
-}
+
 
 
 
@@ -298,9 +272,13 @@ var _ValidObjSet = {
                     for (var key in this.bindings) {
                         if (!$checkId || $checkId == key) {
                             validResult[key] = this.bindings[key];
-                            for (var d in validResult[key]) {
-                                if(d!=="_len");                                
+                            
+                            for (var d in validResult[key]) {                                
+                                if(d!=="_len");
+                                {
+                                    validResult[key][d].reset();                                
                                     validResult._len++;
+                                }
                             }
                             if ($checkId) {
                                 break;
@@ -370,6 +348,61 @@ var _ValidObjSet = {
     }
 };
 
+
+    
+    function getAttrVal(name, vObj) {
+    
+    return function (val) {
+        var _name = name;
+        var _binding = vObj.binding;
+        var attr = _binding.element.attributes[_name];
+        if (val === undefined) {
+            if (attr)
+                return attr.value;
+            return (typeof _inner==='undefined')?false:_inner;
+        }
+        else {
+            if (attr){
+                attr.value = val;}
+            _inner = val;
+        }
+        
+    }
+}
+function converTo(strValue, type, attr, vObj) {
+    switch (type) {
+        case 'number':
+            strValue = parseFloat(strValue);
+            break;
+        case 'booleam':
+            strValue = strValue.toCaseLower() === 'true';
+            break;        
+        case 'function': //如果原来的property是function，那么就是改为方法 都attr，面对的场景是val-required-error 这类型标签        
+            strValue = getAttrVal(attr.name, vObj);
+            break;
+    }
+    return strValue;
+}
+
+function setPropertyVal(obj, pathes, attr, vObj,value) {
+    var property = pathes.pop();
+    var val = value || attr.value;
+    var curObj = obj, propName;
+    while (pathes.length !== 0) {
+        propName = pathes.shift();
+        if (curObj[propName] === undefined) {
+            curObj[propName] = {};
+        }
+        curObj = curObj[propName];
+    }
+    var type = typeof curObj[property];
+    if(type=='undefined'){
+        type=typeof val;
+    }
+    curObj[property] = converTo(val, type, attr,vObj);
+    //avalon.log('debug', property, '=', curObj[property]);
+}
+
 var validatorFactory = {
     create: function (binding, vobj) {
         var result = {},
@@ -408,87 +441,96 @@ var validatorFactory = {
     }
 };
 
-    var initHandler = {
-        'class': function (binding) {
-            //binding.type = 'class'//强制改为class;            
-            var ary = binding.expr.split(':');
-            if (ary.length < 2) {
-                avalon.log('error', binding.expr + '必须是', binding.expr, '="className:bindName 这种格式');
-                //throw new Exception(binding.expr + ' 必须是 className:bindgName');
-            }
-            var newValue = ary[1]; //ary[1] + ':' + const_prop + '.' + ary[0] + '.' + info.param;            
-            binding.expr = newValue;
-            binding.clz = ary[0];
-            binding.oneTime = true;
-        }
-    };
+    
+    /* summary */
 
-    function getTagType(name) {
-
-        if (name.substr(0, basic_tag.class.length) === basic_tag.class) {
-            return basic_tag.class;
+/// <reference path="init.js" />
+/// <reference path="const.js" />
+ 
+    
+var initHandler = {
+    'class': function (binding) {
+        //binding.type = 'class'//强制改为class;            
+        var ary = binding.expr.split(':');
+        if (ary.length < 2) {
+            avalon.log('error', binding.expr + '必须是', binding.expr, '="className:bindName 这种格式');
+            //throw new Exception(binding.expr + ' 必须是 className:bindgName');
         }
-        if (name.substr(0, basic_tag.display.length) === basic_tag.display) {
-            return basic_tag.display;
-        }
-        if (name.substr(0, basic_tag.val.length) === basic_tag.val) {
-            return basic_tag.val;
-        }
+        var newValue = ary[1]; //ary[1] + ':' + const_prop + '.' + ary[0] + '.' + info.param;            
+        binding.expr = newValue;
+        binding.clz = ary[0];
+        binding.oneTime = true;
     }
+};
 
-    avalon.directive(const_type, {
-        init: function (binding) {
+function getTagType(name) {
 
-            var basicType = getTagType(binding.name);
+    if (name.substr(0, basic_tag.class.length) === basic_tag.class) {
+        return basic_tag.class;
+    }
+    if (name.substr(0, basic_tag.display.length) === basic_tag.display) {
+        return basic_tag.display;
+    }
+    if (name.substr(0, basic_tag.val.length) === basic_tag.val) {
+        return basic_tag.val;
+    }
+}
 
-            if (basicType === basic_tag.class) {
-                initHandler.class(binding);
-            } else if (basicType === basic_tag.display) {
-                binding.oneTime = true;
-            } else if (basicType === basic_tag.val) {
-                var elem = binding.element,
-                    bCheck = function () {
-                        //updateHandler.validator.call(binding, this.value, info);
-                        //var val = binding.getter ? binding.getter.apply(0, binding.args) : binding.oldValue;
-                        var vObj = _ValidObjSet.getValidObj(binding);
-                        vObj.valid();
-                    };
-                avalon(elem).bind('blur', bCheck);
-                binding.roolback = function () {
-                    avalon(elem).unbind('blur', bCheck);
+avalon.directive(const_type, {
+    init: function (binding) {
+
+        var basicType = getTagType(binding.name);
+
+        if (basicType === basic_tag.class) {
+            initHandler.class(binding);
+        } else if (basicType === basic_tag.display) {
+            binding.oneTime = true;
+        } else if (basicType === basic_tag.val) {
+            var elem = binding.element,
+                bCheck = function () {
+                    //updateHandler.validator.call(binding, this.value, info);
+                    //var val = binding.getter ? binding.getter.apply(0, binding.args) : binding.oldValue;
+                    var vObj = _ValidObjSet.getValidObj(binding);
+                    vObj.valid();
                 };
-            }
-        },
-        update: function (newValue, oldValue) {
-            var isFirst = oldValue === undefined;//第一次绑定，不需要验证。
-            var binding = this;
-            var vObj = _ValidObjSet.getValidObj(binding);
-            if (isFirst) {
-                var basicType = getTagType(binding.name);
-                if (basicType === basic_tag.val) {
-                    vObj.validators = validatorFactory.create(binding, vObj);
-                    vObj.binding = this;
-                    return;
-                }
-                else if (basicType === basic_tag.class) {
-                    vObj.classBindings.push(binding);
-                }
-                else if (basicType === basic_tag.display) {
-                    binding.oneTime = true;
-                    vObj.displayBindings.push(binding);
-                } else {
-                    avalon.log('warn', binding.name + ' do not support.');
-                }
+            avalon(elem).bind('blur', bCheck);
+            binding.roolback = function () {
+                avalon(elem).unbind('blur', bCheck);
+            };
+        }
+    },
+    update: function (newValue, oldValue) {
+        var isFirst = oldValue === undefined;//第一次绑定，不需要验证。
+        var binding = this;
+        var vObj = _ValidObjSet.getValidObj(binding);
+        if (isFirst) {
+            var basicType = getTagType(binding.name);
+            if (basicType === basic_tag.val) {
+                vObj.validators = validatorFactory.create(binding, vObj);
+                vObj.binding = this;
                 return;
             }
-            vObj.valid(newValue);
-            vObj.notify();
+            else if (basicType === basic_tag.class) {
+                vObj.classBindings.push(binding);
+            }
+            else if (basicType === basic_tag.display) {
+                binding.oneTime = true;
+                vObj.displayBindings.push(binding);
+            } else {
+                avalon.log('warn', binding.name + ' do not support.');
+            }
+            return;
         }
-    });
+        vObj.valid(newValue);
+        vObj.notify();
+    }
+});
 
 
   
 
+
+    
     'use strict';
 function getByVal(val) {
     return function () {
@@ -687,4 +729,6 @@ avalon[const_type] = {
 
 };
 
-})(avalon);
+    
+});
+

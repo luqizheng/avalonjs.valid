@@ -41,7 +41,9 @@ var gulpInsert = {
     "/* ValidObj */": "./src/ValidObj.js",
     "/* const */": "./src/const.js",
     "/* init */": "./src/init.js",
-    "/* validators */": "./src/validators.js"
+    "/* validatorFactory */": "./src/validatorFactory.js",    
+    "/* validators */": "./src/validators.js",
+    "/* validDefined */":"./src/avalon.valid.defined.js"
 };
 
 function creategulp(bUglify) {
@@ -65,7 +67,11 @@ function creategulp(bUglify) {
 }
 
 gulp.task('default', ['avalon', 'avalon:min'], function () {
-    gulp.src("./dist/*.*").pipe(gulp.dest("./example/site/wwwroot/dist"));
+    gulp.src("./dist/*.*")
+        .pipe(gulp.dest("./example/site/wwwroot/dist"));
+        
+        gulp.src("./dist/*.*")
+        .pipe(gulp.dest("./demo/dist"));
 });
 
 gulp.task('check', function () {
@@ -79,7 +85,7 @@ gulp.task("clean:js", ["clean:example"], function (cb) {
 
 });
 gulp.task("clean:example", ["clean:js"], function (cb) {
-    rimraf("./example/site/wwwroot/dist", cb);
+    rimraf("./demo/dist", cb);
 })
 
 gulp.task("avalon:min", function (cb) {
@@ -90,5 +96,5 @@ gulp.task("avalon", function (cb) {
 })
 
 gulp.task('watch', function () {
-    gulp.watch(["./src/**", "./example/"], ['default']);
+    gulp.watch(["./src/**", "./demo/**"], ['default']);
 });

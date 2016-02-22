@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+   <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-theme.css">
+    <script src="lib/jquery-1.11.3.min.js"></script>
+    <script src="lib/avalon.js"></script>
+    <script src="dist/avalon.valid-1.0.js"></script>    
+
+    <style>
+        .has-error-s {
+            background-color: #cfcfcf;
+        }
+        body{
+            background-color:#E2E2E2
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="panel">
+            <div class="col-md-5">            
+                <form action="" ms-controller="regex">
+                    <label>
+                        分组1
+                        <input type="checkbox" ms-change="enable('group1')" checked="checked" />
+                    </label>
+                    <label>分组2
+                        <input type="checkbox" ms-change="enable('group2')" checked="checked " />
+                    </label>
+                    <fieldset>
+                        <legend>
+                            分组1
+                        </legend>
+                        <div class="form-group " ms-val-class-error="has-error:Name" ms-val-class-success="has-success:Name">
+                            <label class="form-label ">Name</label>
+                            <input type="text " class="form-control " ms-duplex="Name" ms-val="Name" val-regex-pattern="\w{1,10}" val-regex-error="请输入1到10个字符串 "
+                            val-success="验证正确 " val-group="group1" />
+                            <span class="help-block " ms-val-display="Name"></span>
+
+                        </div>
+
+                        <div class="form-group " ms-val-class-error="has-error:Email" ms-val-class-success="has-success:Email">
+                            <label class="form-label ">email</label>
+                            <input type="text " class="form-control " ms-duplex="Email" ms-val="Email" val-regex-pattern="\w{1,10}" val-regex-error="请输入1到10个字符串 "
+                            val-success="验证正确 " val-group="group1" />
+                            <span class="help-block " ms-val-display="Email"></span>
+                        </div>
+                    </fieldset>
+
+
+                    <fieldset>
+                        <legend>
+                            分组2
+                        </legend>
+                        <div class="form-group " ms-val-class-error="has-error:Phone" ms-val-class-success="has-success:Phone">
+                            <label class="form-label ">phone</label>
+                            <input type="text " class="form-control " ms-duplex="Phone" ms-val="Phone" val-name="电话" val-group="group2" val-required="Phone"
+                            />
+                            <span class="help-block " ms-val-display="Phone"></span>
+                        </div>
+
+                        <div class="form-group " ms-val-class-error="has-error:Fax" ms-val-class-success="has-success:Fax">
+                            <label class="form-label ">fax</label>
+                            <input type="text " class="form-control " ms-duplex="Fax" ms-val="Fax" val-name="传真" val-group="group2" val-required="Phone"
+                            />
+                            <span class="help-block " ms-val-display="Fax"></span>
+                        </div>
+                    </fieldset>
+                    <button type="button" ms-click="submit">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        var vam=avalon.define({
+            $id:"regex",
+            Name:"test ",
+            Email:" ",
+            Fax:"",
+            Phone:"",
+            enable:function(groupName){
+               vam.$val.enable(groupName,this.checked);
+            },            
+            submit:function(){
+                vam.$val.valid(function(isValid){
+                    alert("验证 "+isValid);
+                });                
+            }
+        });
+    </script>
+</body>
+
+</html>

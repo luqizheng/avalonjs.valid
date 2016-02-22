@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+   <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-theme.css">
+    <script src="lib/jquery-1.11.3.min.js"></script>
+    <script src="lib/avalon.js"></script>
+    <script src="dist/avalon.valid-1.0.js"></script>    
+
+    <style>
+        .has-error-s {
+            background-color: #cfcfcf;
+        }
+        
+        body {
+            background-color: #E2E2E2
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container">
+
+        <!--------------- 整型 ----------------------->
+        <div class="panel">
+            <div class="panel-title">
+                <h3>整型</h3></div>
+            <div class="panel-body">
+                <div class="col-md-5">
+                    <form action="" ms-controller="int">
+
+                        <div class="form-group" ms-val-class-error="has-error:number1" ms-val-class-success="has-success:number1">
+                            <label class="form-label">ms-duplex同步</label>
+                            <input type="text" class="form-control" ms-duplex="number1" ms-val="number1" val-int="" val-int-error="请输入整形数值" val-success="验证正确"
+                            />
+                            <span class="help-block" ms-val-display="number1"></span>
+                        </div>
+
+                        <div class="form-group" ms-val-class-error="has-error:number2" ms-val-class-success="has-success:number2">
+                            <label class="form-label">ms-duplex-number</label>
+                            <input type="number" class="form-control" ms-duplex-number="number2" ms-val="number2" val-int="" val-int-error="请输入整形数值"
+                            val-success="验证正确" />
+                            <span class="help-block" ms-val-display="number2"></span>
+                        </div>
+                        <div>
+                            <button ms-click="submit">submit</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-5">
+                    <p>
+                        val-int="" 无参数。
+                        <br> val-int-error="请输入整形数值"
+                        <br> 使用 ms-duplex-number 和 ms-duplex 都可以执行。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            var regex=avalon.define({
+            $id:"int",
+            number2:"",
+            number1:"",
+            submit:function(){
+                vam.$val.valid(function(isValid){
+                    alert("验证"+isValid);
+                });                
+            }
+        });
+        </script>
+        <!--------------- end 整型 ----------------------->
+        <div class="panel">
+            <div class="panel-title">数值范围</div>
+            <div class="panel-body">
+                <div class="col-md-5">
+                    <form action="" ms-controller="range">
+                        <div class="form-group" ms-val-class-error="has-error:floatNumber" ms-val-class-success="has-success:floatNumber">
+                            <label class="form-label">浮点： ms-duplex同步</label>
+                            <input type="text" class="form-control" ms-duplex="floatNumber" ms-val="floatNumber" val-range-min="1.4" val-range-max="2.0"
+                            val-success="验证正确" />
+                            <span class="help-block" ms-val-display="floatNumber"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">整型范围</label>
+                            <div class="row">
+                                <div class="col-md-5">
+                                    min:
+                                    <input type="number" ms-duplex-number="intRange.min" val-int="" />
+                                    <span class="help-block">min 使用用ms-attr-val-range-min 来做到动态的</span>
+                                </div>
+                                <div class="col-md-5">
+                                    max:
+                                    <input type="number" ms-duplex-number="intRange.max" val-int="" />
+                                    <span class="help-block">min 使用用ms-attr-val-range-max 来做到动态的</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group" ms-val-class-error="has-error:intNumber" ms-val-class-success="has-success:intNumber">
+                            <label class="form-label">整型：ms-duplex</label>
+                            <input type="number" class="form-control" ms-duplex="intNumber" ms-val="intNumber" ms-attr-val-range-min="intRange.min" ms-attr-val-range-max="intRange.max"
+                            val-success="验证正确" />
+                            <span class="help-block" ms-val-display="intNumber"></span>
+                        </div>
+                        <div>
+                            <button ms-click="submit">submit</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-5">
+                    <p>
+                        val-int="" 无参数。
+                        <br> val-int-error="请输入整形数值"，报错说明
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            var regex=avalon.define({
+            $id:"range",
+            "intNumber":1,
+            "floatNumber":0.5,
+            intRange:{
+                min:1,
+                max:100
+            },           
+            submit:function(){
+                vam.$val.valid(function(isValid){
+                    alert("验证"+isValid);
+                });                
+            }
+        });
+        </script>
+
+
+
+        <!----------- Regex ----------------------->
+        <div class="panel">
+            <div class="panel-title">正则表达式</div>
+            <div class="panel-body">
+                <div class="col-md-5">
+                    <form action="" ms-controller="regex">
+                        <div class="form-group" ms-val-class-error="has-error:Name" ms-val-class-success="has-success:Name">
+                            <label class="form-label"></label>
+                            <input type="text" class="form-control" ms-duplex="Name" ms-val="Name" val-regex-pattern="\w{1,10}" val-regex-error="请输入1到10个字符串"
+                            val-success="验证正确" />
+                            <span class="help-block" ms-val-display="Name"></span>
+                        </div>
+                        <div>
+                            <button ms-click="submit">submit</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-5">
+                    <p>
+                        val-regex-pattern="\w{1,10}"
+                        <br> val-regex-error="请输入1到10个字符串"
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            var regex=avalon.define({
+            $id:"regex",
+            Name:"test",
+            submit:function(){
+                vam.$val.valid(function(isValid){
+                    alert("验证"+isValid);
+                });                
+            }
+        });
+        </script>
+        <!---------------------------- regex end------------------------>
+
+
+        <!--------------- compare-lt ------------------->
+        <div class="panel">
+            <div class="panel-title">compare-lt</div>
+            <div class="panel-body">
+                <div class="col-md-5" ms-controller="compare-lt">
+
+                    <fieldset style="margin-buttom:15px">
+                        <legend>
+                            <h3>
+                            ms-lt-value</h3>
+                        </legend>
+                        <form action="">
+                            <div class="form-group" ms-val-class-error="has-error:number1" ms-val-class-success="has-success:number1">
+                                <label class="form-label">number1</label>
+                                <input type="text" class="form-control" ms-duplex-number="number1" ms-val="number1" val-lt-value="15" val-success="验证正确"
+                                />
+                                <span class="help-block" ms-val-display="number1"></span>
+                                <span class="help-block">数值15是不可变的，因此请使用val-lt-value来指定15</span>
+                            </div>
+                        </form>
+                    </fieldset>
+
+                    <fieldset style="margin-buttom:15px">
+                        <legend>ms-attr-val-lt-value="lessThan" </legend>
+                        <div class="form-group" ms-val-class-error="has-error:number2">
+                            <label class="form-label">number2</label>
+                            <input type="text" class="form-control" ms-duplex-number="number2" ms-val="number2" ms-attr-val-lt-value="lessThan2" val-success="验证正确"
+                            />
+                            <span class="help-block" ms-val-display="number2"></span>
+                            <span class="help-block">数值是vm属性，因此这个属性是可变的。但是当lessThan发生变化。 number1不会自动再次验证。只有按下submit的时候才会再次验证</span>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>val-lt-compare="lessThan2"</legend>
+
+                        <div class="form-group" ms-val-class-error="has-error:number3">
+                            <label class="form-label">number3</label>
+                            <input type="text" class="form-control" ms-duplex-number="number3" ms-val="number3" val-lt-compare="lessThan3" val-success="验证正确"
+                            />
+                            <span class="help-block" ms-val-display="number3"></span>
+                            <span class="help-block">对比vm中lessThan的值，通过val-lt-compare 指出vm.lessthan2 的对比值. 其中 lessThan2 并没有声明为验证值 </span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">lessThan3</label>
+                            <input type="text" class="form-control" ms-duplex-number="lessThan3" ms-val="lessThan3" />
+                        </div>
+                    </fieldset>
+                    <div>
+                        <button ms-click="submit">submit</button>
+                    </div>
+                    </form>
+                </div>
+                <div class="col-md-5">
+                    <p>
+                        对比比较复杂。总共分为两类
+                        <ol>
+                            <li>指定值，和vm其他值无关</li>
+                            <li>和vm中某个属性进行对比</li>
+                        </ol>
+
+                        <p>
+                            第一种情况，用 val-lt-value=“15” 指定就可以了。当然为了做到和第二种一样， 也可以是ma-attr-val-lt-value="lessThan"指定也是可以的。不过当lessThan更改的时候。就无法主动通知 需要验证的一方。
+                        </p>
+
+                        <p>
+                            第二种情况是，是和vm其他属性对比,那么就要用 data-lt-compare="lessThan" 去声明要验证属性。然后在lessthan input-ctrl 中 声明lessThan,如 ms-val="lessThan"
+                        </p>
+
+                    </p>
+                </div>
+            </div>
+        </div>
+        <script>
+            var comnpare_lt=avalon.define({
+            $id:"compare-lt",            
+            number1:100,
+            lessThan1:10,                        
+            number2:100,
+            lessThan2:10,
+            number3:100,
+            lessThan3:10,
+            submit:function(){
+                comnpare_lt.$val.valid(function(isValid){
+                    alert("验证"+isValid);
+                });                
+            }
+        });
+        </script>
+        <!---------------------------- comparen-lt end------------------------>
+
+        <!---------------------------------- ajax DEMO--------------------------------------->
+        <div class="panel">
+            <div class="panel-title">compare-lt</div>
+            <div class="panel-body">
+                <div class="col-md-5" ms-controller="ajax">
+
+                    <fieldset style="margin-buttom:15px">
+                        <legend>
+                            <h3>
+                            ms-lt-value</h3>
+                        </legend>
+                        <form action="">
+                            <div class="form-group" ms-val-class-error="has-error:model.email" ms-val-class-success="has-success:model.email">
+                                <label class="form-label">验证Email</label>
+                                <input type="text" class="form-control" ms-duplex="model.email" ms-val="model.email"
+                                val-ajax-url="ajax.json" 
+                                ms-attr-val-ajax-data-email="model.email"
+                                ms-attr-val-ajax-data-id="model.id" , ms-attr-val-ajax-data-email="model.backup" val-success="验证正确"
+                                />
+                                <span class="help-block" ms-val-display="model.email"></span>
+                                <span class="help-block"></span>
+                            </div>
+                        </form>
+                    </fieldset>
+
+                    <div>
+                        <button ms-click="submit">submit</button>
+                    </div>
+                    </form>
+                </div>
+                <div class="col-md-5">
+                    <p>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <script>
+            var ajax=avalon.define({
+            $id:"ajax",            
+            model:{
+                id:1,
+                email:"nocheck@check.net",
+                backup:"check@check.net",
+            },
+            submit:function(){
+                ajax.$val.valid(function(isValid){
+                    alert("验证"+isValid);
+                });                
+            }
+        });
+        </script>
+    </div>
+</body>
+
+</html>

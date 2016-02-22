@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-theme.css">
+    <script src="lib/jquery-1.11.3.min.js"></script>
+    <script src="lib/avalon.js"></script>
+    <script src="dist/avalon.valid-1.0.js"></script>
+    <style>
+        .has-error-s {
+            background-color: #cfcfcf;
+        }
+        
+        body {
+            background-color: #E2E2E2
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            Array
+            <div ms-controller="listVM" class="col-md-5">
+
+                <table class="table">
+                    <tr ms-repeat="values">
+                        <td>
+                            <input type="text" ms-duplex="el.loginId" ms-val="el.loginId" val-required-error="Please input it" />
+
+                            <span ms-val-class-error="show:el.loginId">*</span>
+                        </td>
+                        <td>
+
+                            <input type="text" ms-duplex="el.email" ms-val="el.email" val-required-error="Please input it" val-email-error="please input correct format for email."
+                            />
+                            <span ms-val-class-error="show:el.email" class="hide" style="color:red">*</span>
+                        </td>
+
+                        <td>
+                            <button type="button" ms-click="valid(el)">valid(el)</button>
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="col-md-12">
+                    <input type="button" value="submit" ms-click="submit">
+
+                </div>
+
+
+            </div>
+            <script>
+                var listVm=avalon.define({
+                    $id:"listVM",
+                    values:[{
+                        loginId:"1",
+                        email:"1@1.com"
+                    }],
+                    submit:function(){
+                         listVm.$val.valid(function(isPass){
+                                alert(isPass)
+                         });
+                    },
+                    valid:function(el){
+                        listVm.$val.valid(el,function(isPass){
+                            alert(isPass)
+                        });
+                    }
+                })
+                for(var i=2;i<10;i++){
+                    listVm.values.push({loginId:i,email:i+"@test.com"});
+                }
+            </script>
+        </div>
+    </div>
+
+</body>
+
+</html>

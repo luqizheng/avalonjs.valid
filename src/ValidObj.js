@@ -19,9 +19,10 @@ function ValidObj(name, binding) {
         var self = this;
         var isPass = this.isPass();
         avalon.each(self.classBindings, function (i, binding) {
+            var $ele=avalon(binding.element)
             var properName = getPropName(binding);
-            var showOrNot = properName === 'success' ? isPass : !isPass;
-            avalon(binding.element).toggleClass(binding.clz, showOrNot);
+            var showOrNot = properName === 'success' ? isPass : !isPass;            
+            $ele.toggleClass(binding.clz, showOrNot);            
         });       
         //output 信息        
         avalon.each(self.displayBindings, function (i, binding) {
@@ -38,6 +39,14 @@ function ValidObj(name, binding) {
             avalon.innerHTML(binding.element, msg);
         });
     };
+    this.reset = function () {
+        avalon.each(self.classBindings, function (i, binding) {
+            avalon(binding.element).toggleClass(binding.clz, false);
+        });
+        avalon.each(self.displayBindings, function (i, binding) {
+            avalon.innerHTML(binding.element, "");
+        });
+    }
     this.getValue = function () {
         var binding = this.binding;
         return binding.getter ? binding.getter.apply(0, binding.args) : binding.oldValue;
