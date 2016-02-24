@@ -9,7 +9,7 @@ function compare(func, errorFunc) {
         compare: '',
         value: avalon.noop,
         func: function (val1, cb) {
-            var valFunc = this.vObj.comp[this.compare];
+            var valFunc = this.vObj.comp[this.compare()];
             var val2;
             if (!valFunc)
                 val2 = this.value();
@@ -20,14 +20,14 @@ function compare(func, errorFunc) {
         error: function () {
             var vObj = this.vObj;
             var self = this, selfName = vObj.name || vObj._propertyName,
-                compareTarget = self.vObj.comp[self.compare],
-                compareText = compareTarget ? (compareTarget.name || compareTarget._propertyName) : (self.compare || self.value());
+                compareTarget = self.vObj.comp[self.compare()],
+                compareText = compareTarget ? (compareTarget.name || compareTarget._propertyName) : (self.compare() || self.value());
             return errorFunc(selfName, compareText)
         },
         inited: function (binding, vobj) {
 
             var self = this, value = self.value(),
-                compareValidObj = self.vObj.comp[self.compare];
+                compareValidObj = self.vObj.comp[self.compare()];
             if (value !== undefined)
                 return;
             if (compareValidObj) {
@@ -35,9 +35,9 @@ function compare(func, errorFunc) {
             } else {
                 for (var i = 0; i < binding.vmodels.length; i++) {
                     var vmodel = binding.vmodels[i];
-                    if (vmodel[self.compare]) {
-                        self.value = getByVal(vmodel[self.compare]);
-                        vmodel.$watch(self.compare, function (newValue) {
+                    if (vmodel[self.compare()]) {
+                        self.value = getByVal(vmodel[self.compare()]);
+                        vmodel.$watch(self.compare(), function (newValue) {
                             vobj.valid();
                         });
                         break;
@@ -77,7 +77,7 @@ avalon[const_type] = {
         return {
             length: 10,
             func: function (value, cb) {
-                var len = parseInt(this.length);
+                var len = parseInt(this.length());
                 cb(value.toString().length <= len);
             },
             error: function () {
@@ -89,7 +89,7 @@ avalon[const_type] = {
         return {
             length: 6,
             func: function (value, cb) {
-                var len = parseInt(this.length);
+                var len = parseInt(this.length());
                 cb(value.toString().length >= len);
             },
             error: function () {

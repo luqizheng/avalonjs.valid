@@ -1,12 +1,12 @@
 function getAttrVal(name, vObj) {
-    
+    var _inner;
     return function (val) {
         var _name = name;
         var _binding = vObj.binding;
         var attr = _binding.element.attributes[_name];
         if (val === undefined) {
-            if (attr)
-                return attr.value;
+            if (attr){
+                return attr.value;}
             return (typeof _inner==='undefined')?false:_inner;
         }
         else {
@@ -17,6 +17,36 @@ function getAttrVal(name, vObj) {
         
     }
 }
+
+function accessor(attr,defVal,type)
+{
+    var _attr=attr;
+    var _val= defVal;
+    var _type = type;
+    return function(val)
+    {    
+        if(val===undefined)
+        {
+            if(_attr!=undefined)
+            {            
+                _val=_attr.value;           
+            }   
+            switch(_type){
+                case 'number':
+                    return parseFloat(_val);
+                case 'booleam':
+                    return _val=='true';
+            }
+            return _val;
+        }           
+        else{
+             if(_attr!=undefined)
+                _attr.value=val;
+                _val=val;
+        }
+    }        
+}
+
 function converTo(strValue, type, attr, vObj) {
     switch (type) {
         case 'number':
@@ -47,7 +77,7 @@ function setPropertyVal(obj, pathes, attr, vObj,value) {
     if(type=='undefined'){
         type=typeof val;
     }
-    curObj[property] = converTo(val, type, attr,vObj);
+    curObj[property] = accessor(attr,value,type);
     //avalon.log('debug', property, '=', curObj[property]);
 }
 

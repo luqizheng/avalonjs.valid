@@ -6,6 +6,7 @@
     
 var initHandler = {
     'class': function (binding) {
+        try{
         //binding.type = 'class'//强制改为class;            
         var ary = binding.expr.split(':');
         if (ary.length < 2) {
@@ -13,9 +14,13 @@ var initHandler = {
             //throw new Exception(binding.expr + ' 必须是 className:bindgName');
         }
         var newValue = ary[1]; //ary[1] + ':' + const_prop + '.' + ary[0] + '.' + info.param;            
-        binding.expr = newValue;
+        binding.expr = newValue;        
         binding.clz = ary[0];
         binding.oneTime = true;
+        }
+        catch(e){
+            console.log(e);
+        }
     }
 };
 
@@ -50,7 +55,7 @@ avalon.directive(const_type, {
                     vObj.valid();
                 };
             avalon(elem).bind('blur', bCheck);
-            binding.roolback = function () {
+            binding.rollback = function () {
                 avalon(elem).unbind('blur', bCheck);
             };
         }
@@ -79,6 +84,7 @@ avalon.directive(const_type, {
         }
         vObj.valid(newValue);
         vObj.notify();
+        this.$vObj=vObj;
     }
 });
 

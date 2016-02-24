@@ -2,7 +2,7 @@
 /// <reference path='Validator.js' />
 /// <reference path='../lib/avalon.js' /> 
 function ValidObj(name, binding) {
-    'use strict';
+    
     this.validating = false;//中间状态，验证ing，    
     this.success = '';
     this.$compId = '';

@@ -24,8 +24,8 @@
         factory(window['avalon']);
     }
 } (function (avalon) {
-    alert('ok')
-     
+    
+    
 var basic_tag = {    
     class: 'ms-val-class',
     display: 'ms-val-display',
@@ -37,22 +37,132 @@ var const_prop = '$val';
 function isArray(obj) {   
   return Object.prototype.toString.call(obj) === '[object Array]';    
 }  
-      
-    
-function Validator() {
-    this.error = function (attr) { return '输入错误请纠正'; };
-    this.async = false; //async validator, if you use ajax in the this.func, please set it to true.
-    this.func = false;//function (value,callback) {}
-    this.init = avalon.noop; //刚刚创建Validator的时候
-    this.inited = avalon.noop; //初始化接
-}
+    /// <reference path='validator.js' />
+/// <reference path='const.js' />
 
-    
+
+
+
+
+var _ValidObjSet = {
+    getValidObj: function (binding) {
+        var vmodel = this._findVm(binding.vmodels),//top vm.
+            ary = binding.expr.split(':'),
+            propertyName = ary[ary.length > 1 ? 1 : 0],
+            result = null,
+            $id = binding.args[0].$id,
+            vm$val = vmodel[const_prop]
+            ;
+        if (!vm$val) {
+            vm$val = vmodel[const_prop] = {
+                bindings: {},
+                valid: function () {
+                    var validResult = { _len: 0 }, model = false, callback = avalon.noop, $checkId = false, args = arguments;
+                    var summary = true;
+                    if (args.length === 1) {
+                        callback = args[0];
+                    }
+                    if (args.length === 2) {
+                        model = args[0];
+                        callback = args[1];
+                    }
+
+                    if (model) {
+                        $checkId = model.$id;
+                        if (model.$ups) {
+                            for (var key in model.$ups) {
+                                $checkId = model.$ups[key].$id
+                                break;
+                            }
+                        }
+                    }
+
+
+                    for (var key in this.bindings) {
+                        if (!$checkId || $checkId == key) {
+                            validResult[key] = this.bindings[key];
+                            
+                            for (var d in validResult[key]) {                                
+                                if(d!=="_len");
+                                {
+                                    validResult[key][d].reset();                                
+                                    validResult._len++;
+                                }
+                            }
+                            if ($checkId) {
+                                break;
+                            }
+                        }
+                    }
+                    for (var key in validResult) {
+                        if (key != "_len") {
+                            for (var prop in validResult[key]) {
+                                var vObj = validResult[key][prop];
+                                vObj.valid(undefined, function (isPass) {
+                                    summary = summary && isPass;
+                                    validResult._len--;
+                                    if (validResult._len == 0 && callback) {
+                                        callback(summary);
+                                    }
+                                });
+                            }
+                        }
+                    }
+                },
+                enable: function (groupName, enabled) {
+                    if(enabled===undefined)
+                    {
+                        enabled=groupName;
+                        groupName=false;
+                    }
+                     for (var key in this.bindings) {
+                         var binding=this.bindings[key];
+                         for(var prop in binding){
+                             var vObj=binding[prop]
+                             if (groupName===false || vObj.group == groupName) {
+                                    vObj.disabled(!enabled);
+                             }
+                         }
+                     }                    
+                }
+
+            };
+        }
+        var comp = vm$val.bindings[$id];
+        if (!comp) {
+            vm$val.bindings[$id] = comp = {};
+        }
+
+        result = comp[propertyName];
+        if (!result) {
+            result = new ValidObj(propertyName,binding);
+            result.binding = binding;
+            result.comp = comp;
+            result.$compId = $id;
+            comp[propertyName] = result;
+            //avalon.log('debug', 'created validation obj in .' + const_prop + '.' + $id + '.' + propertyName);
+        }
+        return result;
+    },
+    _findVm: function (vmodels) {
+        var result, $proxy = '$proxy';
+        avalon.each(vmodels, function (i, v) {
+            if (v.$id.substr(0, $proxy.length) === $proxy) {
+                return true;
+            }
+            result = v;
+            return false;
+        });
+        return result;
+    }
+};
+
+
     /// <reference path='init.js' />
 /// <reference path='Validator.js' />
 /// <reference path='../lib/avalon.js' /> 
 function ValidObj(name, binding) {
-    'use strict';
+    
     this.validating = false;//中间状态，验证ing，    
     this.success = '';
     this.$compId = '';
@@ -227,138 +337,15 @@ function getPropName(binding) {
 
 
 
-        
-    /// <reference path='validator.js' />
-/// <reference path='const.js' />
-
-
-
-
-
-var _ValidObjSet = {
-    getValidObj: function (binding) {
-        var vmodel = this._findVm(binding.vmodels),//top vm.
-            ary = binding.expr.split(':'),
-            propertyName = ary[ary.length > 1 ? 1 : 0],
-            result = null,
-            $id = binding.args[0].$id,
-            vm$val = vmodel[const_prop]
-            ;
-        if (!vm$val) {
-            vm$val = vmodel[const_prop] = {
-                bindings: {},
-                valid: function () {
-                    var validResult = { _len: 0 }, model = false, callback = avalon.noop, $checkId = false, args = arguments;
-                    var summary = true;
-                    if (args.length === 1) {
-                        callback = args[0];
-                    }
-                    if (args.length === 2) {
-                        model = args[0];
-                        callback = args[1];
-                    }
-
-                    if (model) {
-                        $checkId = model.$id;
-                        if (model.$ups) {
-                            for (var key in model.$ups) {
-                                $checkId = model.$ups[key].$id
-                                break;
-                            }
-                        }
-                    }
-
-
-                    for (var key in this.bindings) {
-                        if (!$checkId || $checkId == key) {
-                            validResult[key] = this.bindings[key];
-                            
-                            for (var d in validResult[key]) {                                
-                                if(d!=="_len");
-                                {
-                                    validResult[key][d].reset();                                
-                                    validResult._len++;
-                                }
-                            }
-                            if ($checkId) {
-                                break;
-                            }
-                        }
-                    }
-                    for (var key in validResult) {
-                        if (key != "_len") {
-                            for (var prop in validResult[key]) {
-                                var vObj = validResult[key][prop];
-                                vObj.valid(undefined, function (isPass) {
-                                    summary = summary && isPass;
-                                    validResult._len--;
-                                    if (validResult._len == 0 && callback) {
-                                        callback(summary);
-                                    }
-                                });
-                            }
-                        }
-                    }
-                },
-                enable: function (groupName, enabled) {
-                    if(enabled===undefined)
-                    {
-                        enabled=groupName;
-                        groupName=false;
-                    }
-                     for (var key in this.bindings) {
-                         var binding=this.bindings[key];
-                         for(var prop in binding){
-                             var vObj=binding[prop]
-                             if (groupName===false || vObj.group == groupName) {
-                                    vObj.disabled(!enabled);
-                             }
-                         }
-                     }                    
-                }
-
-            };
-        }
-        var comp = vm$val.bindings[$id];
-        if (!comp) {
-            vm$val.bindings[$id] = comp = {};
-        }
-
-        result = comp[propertyName];
-        if (!result) {
-            result = new ValidObj(propertyName,binding);
-            result.binding = binding;
-            result.comp = comp;
-            result.$compId = $id;
-            comp[propertyName] = result;
-            //avalon.log('debug', 'created validation obj in .' + const_prop + '.' + $id + '.' + propertyName);
-        }
-        return result;
-    },
-    _findVm: function (vmodels) {
-        var result, $proxy = '$proxy';
-        avalon.each(vmodels, function (i, v) {
-            if (v.$id.substr(0, $proxy.length) === $proxy) {
-                return true;
-            }
-            result = v;
-            return false;
-        });
-        return result;
-    }
-};
-
-
-    
     function getAttrVal(name, vObj) {
-    
+    var _inner;
     return function (val) {
         var _name = name;
         var _binding = vObj.binding;
         var attr = _binding.element.attributes[_name];
         if (val === undefined) {
-            if (attr)
-                return attr.value;
+            if (attr){
+                return attr.value;}
             return (typeof _inner==='undefined')?false:_inner;
         }
         else {
@@ -369,6 +356,36 @@ var _ValidObjSet = {
         
     }
 }
+
+function accessor(attr,defVal,type)
+{
+    var _attr=attr;
+    var _val= defVal;
+    var _type = type;
+    return function(val)
+    {    
+        if(val===undefined)
+        {
+            if(_attr!=undefined)
+            {            
+                _val=_attr.value;           
+            }   
+            switch(_type){
+                case 'number':
+                    return parseFloat(_val);
+                case 'booleam':
+                    return _val=='true';
+            }
+            return _val;
+        }           
+        else{
+             if(_attr!=undefined)
+                _attr.value=val;
+                _val=val;
+        }
+    }        
+}
+
 function converTo(strValue, type, attr, vObj) {
     switch (type) {
         case 'number':
@@ -399,7 +416,7 @@ function setPropertyVal(obj, pathes, attr, vObj,value) {
     if(type=='undefined'){
         type=typeof val;
     }
-    curObj[property] = converTo(val, type, attr,vObj);
+    curObj[property] = accessor(attr, value,type);
     //avalon.log('debug', property, '=', curObj[property]);
 }
 
@@ -442,6 +459,14 @@ var validatorFactory = {
 };
 
     
+function Validator() {
+    this.error = function (attr) { return '输入错误请纠正'; };
+    this.async = false; //async validator, if you use ajax in the this.func, please set it to true.
+    this.func = false;//function (value,callback) {}
+    this.init = avalon.noop; //刚刚创建Validator的时候
+    this.inited = avalon.noop; //初始化接
+}
+
     /* summary */
 
 /// <reference path="init.js" />
@@ -450,6 +475,7 @@ var validatorFactory = {
     
 var initHandler = {
     'class': function (binding) {
+        try{
         //binding.type = 'class'//强制改为class;            
         var ary = binding.expr.split(':');
         if (ary.length < 2) {
@@ -457,9 +483,13 @@ var initHandler = {
             //throw new Exception(binding.expr + ' 必须是 className:bindgName');
         }
         var newValue = ary[1]; //ary[1] + ':' + const_prop + '.' + ary[0] + '.' + info.param;            
-        binding.expr = newValue;
+        binding.expr = newValue;        
         binding.clz = ary[0];
         binding.oneTime = true;
+        }
+        catch(e){
+            console.log(e);
+        }
     }
 };
 
@@ -494,7 +524,7 @@ avalon.directive(const_type, {
                     vObj.valid();
                 };
             avalon(elem).bind('blur', bCheck);
-            binding.roolback = function () {
+            binding.rollback = function () {
                 avalon(elem).unbind('blur', bCheck);
             };
         }
@@ -523,6 +553,7 @@ avalon.directive(const_type, {
         }
         vObj.valid(newValue);
         vObj.notify();
+        this.$vObj=vObj;
     }
 });
 
@@ -542,7 +573,7 @@ function compare(func, errorFunc) {
         compare: '',
         value: avalon.noop,
         func: function (val1, cb) {
-            var valFunc = this.vObj.comp[this.compare];
+            var valFunc = this.vObj.comp[this.compare()];
             var val2;
             if (!valFunc)
                 val2 = this.value();
@@ -553,14 +584,14 @@ function compare(func, errorFunc) {
         error: function () {
             var vObj = this.vObj;
             var self = this, selfName = vObj.name || vObj._propertyName,
-                compareTarget = self.vObj.comp[self.compare],
-                compareText = compareTarget ? (compareTarget.name || compareTarget._propertyName) : (self.compare || self.value());
+                compareTarget = self.vObj.comp[self.compare()],
+                compareText = compareTarget ? (compareTarget.name || compareTarget._propertyName) : (self.compare() || self.value());
             return errorFunc(selfName, compareText)
         },
         inited: function (binding, vobj) {
 
             var self = this, value = self.value(),
-                compareValidObj = self.vObj.comp[self.compare];
+                compareValidObj = self.vObj.comp[self.compare()];
             if (value !== undefined)
                 return;
             if (compareValidObj) {
@@ -568,9 +599,9 @@ function compare(func, errorFunc) {
             } else {
                 for (var i = 0; i < binding.vmodels.length; i++) {
                     var vmodel = binding.vmodels[i];
-                    if (vmodel[self.compare]) {
-                        self.value = getByVal(vmodel[self.compare]);
-                        vmodel.$watch(self.compare, function (newValue) {
+                    if (vmodel[self.compare()]) {
+                        self.value = getByVal(vmodel[self.compare()]);
+                        vmodel.$watch(self.compare(), function (newValue) {
                             vobj.valid();
                         });
                         break;
