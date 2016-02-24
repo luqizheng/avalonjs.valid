@@ -13,11 +13,11 @@ avalonjs 的一个验证器
 
 存在问题
 以下这种形式无法实现
-<pre>
-<div ms-val-class-error="error:list">
-     <div ms-repeat='list'>
+```html
+ <div ms-val-class-error="error:list">
+      <div ms-repeat='list'>
         <input ms-duplex='el.name' ms-val='el.name' val-requied-error='请输入XXX'/>
      </div>
-</div>
-</pre>
+ </div>
+```
 
