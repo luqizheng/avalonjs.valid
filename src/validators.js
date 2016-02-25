@@ -7,9 +7,10 @@ function getByVal(val) {
 function compare(func, errorFunc) {
     return {
         compare: '',
-        value: avalon.noop,
+        value: '',
         func: function (val1, cb) {
-            var valFunc = this.vObj.comp[this.compare()];
+            var comparenName = this.compare();
+            var valFunc = this.vObj.comp[comparenName];
             var val2;
             if (!valFunc)
                 val2 = this.value();
@@ -36,7 +37,7 @@ function compare(func, errorFunc) {
                 for (var i = 0; i < binding.vmodels.length; i++) {
                     var vmodel = binding.vmodels[i];
                     if (vmodel[self.compare()]) {
-                        self.value = getByVal(vmodel[self.compare()]);
+                        self.value(getByVal(vmodel[self.compare()]));
                         vmodel.$watch(self.compare(), function (newValue) {
                             vobj.valid();
                         });
@@ -120,7 +121,7 @@ avalon[const_type] = {
         return {
             pattern: '',
             func: function (value, cb) {
-                var reg = new RegExp(this.pattern);
+                var reg = new RegExp(this.pattern());
                 cb(reg.test(value));
             },
             error: function (vObj, attr) {
@@ -165,31 +166,36 @@ avalon[const_type] = {
         return {
             method: 'get',
             url: '',
-            data: {},
-            func: function (val, cb) {
-                var obj = {};
-                for (var key in this.data) {
-                    obj[key] = this.data[key]();
+            data: function (ele) {
+                var result = {};
+                for (var i = 0; i < ele.attributes.length; i++) {
+                    var attr = binding.element.attributes[i];
+                    if (/val-ajax-data-.+/i.test(attr.name)) {
+                        var pathes = attr.name.substr('val-ajax-data-'.length).split('-');
+                        var lastProp = pathes.pop();
+                        var curObj = result;
+                        while (pathes.length != 0) {
+                            var prop = pathes.shift();
+                            if (curObj[prop] == undefined);
+                            {
+                                curObj[prop] = {};
+                            }
+                            curObj = curObj[prop];
+                        }
+                        curObj[lastProp] = attr.value;
+                    }
                 }
-                                 
+            },
+            func: function (val, cb, vobj) {
+                var obj = this.data(vobj.binding.element);
                 $.ajax({
-                    method: this.method,
-                    url: this.url,
+                    method: this.method(),
+                    url: this.url(),
                     data: obj,
                     success: function (ret) {
                         cb(ret);
                     }
                 });
-            },
-            init: function (binding) {
-                var self = this;
-                for (var i = 0; i < binding.element.attributes.length; i++) {
-                    var attr = binding.element.attributes[i];
-                    if (/val-ajax-data-.+/i.test(attr.name)) {
-                        var pathes = attr.name.substr('val-ajax-data-'.length).split('-');
-                        setPropertyVal(self.data, pathes, attr, self.vObj,avalon.noop);
-                    }
-                }
             }
         }
     }

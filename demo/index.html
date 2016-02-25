@@ -4,19 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css">
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-theme.css">
     <script src="lib/jquery-1.11.3.min.js"></script>
-    <script src="lib/avalon.js"></script>
-    
+    <script src="lib/avalon.js"></script>    
     <script src="dist/avalon.valid-1.0.js"></script>
 
     <style>
         .has-error-s {
             background-color: #cfcfcf;
-        }
-        
+        }        
         body {
             background-color: #E2E2E2
         }
@@ -26,7 +23,6 @@
 <body>
     <div class="container">
         <div class="row">
-
             <div class="col-md-5">
                 <div class="panel" ms-controller="changePassword">
                     <div class="panel-title">
@@ -82,12 +78,9 @@
                     </ul>
 
                     <h3>使用验证器</h3>
-
                     <p>
-                        在 ms-val="prop" 所在的标签下， 用ms-val-required 就是使用 使用required这个验证器， ms-val-required-error="验证出错的说明"
-
+                        在 ms-val="prop" 所在的标签下， 用val-required 就是使用 使用required这个验证器， val-required-error="验证出错的说明"
                     </p>
-
                 </div>
             </div>
         </div>

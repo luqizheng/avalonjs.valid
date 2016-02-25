@@ -60,11 +60,10 @@ avalon.directive(const_type, {
             };
         }
     },
-    update: function (newValue, oldValue) {
-        var isFirst = oldValue === undefined;//第一次绑定，不需要验证。
+    update: function (newValue, oldValue) {        
         var binding = this;
         var vObj = _ValidObjSet.getValidObj(binding);
-        if (isFirst) {
+        if (oldValue === undefined) {
             var basicType = getTagType(binding.name);
             if (basicType === basic_tag.val) {
                 vObj.validators = validatorFactory.create(binding, vObj);

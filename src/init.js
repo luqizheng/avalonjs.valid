@@ -1,10 +1,6 @@
 /// <reference path='validator.js' />
 /// <reference path='const.js' />
 
-
-
-
-
 var _ValidObjSet = {
     getValidObj: function (binding) {
         var vmodel = this._findVm(binding.vmodels),//top vm.
@@ -42,11 +38,11 @@ var _ValidObjSet = {
                     for (var key in this.bindings) {
                         if (!$checkId || $checkId == key) {
                             validResult[key] = this.bindings[key];
-                            
-                            for (var d in validResult[key]) {                                
-                                if(d!=="_len");
+
+                            for (var d in validResult[key]) {
+                                if (d !== "_len");
                                 {
-                                    validResult[key][d].reset();                                
+                                    validResult[key][d].reset();
                                     validResult._len++;
                                 }
                             }
@@ -55,36 +51,35 @@ var _ValidObjSet = {
                             }
                         }
                     }
+                    var errorMessage = [];
                     for (var key in validResult) {
                         if (key != "_len") {
                             for (var prop in validResult[key]) {
                                 var vObj = validResult[key][prop];
-                                vObj.valid(undefined, function (isPass) {
+                                vObj.valid(undefined, function (isPass, msg) {
                                     summary = summary && isPass;
+                                    if (!isPass) {
+                                        errorMessage.push({msg:msg,vObj:vObj.name});
+                                    }
                                     validResult._len--;
                                     if (validResult._len == 0 && callback) {
-                                        callback(summary);
+                                        callback(summary,errorMessage);
                                     }
                                 });
                             }
                         }
                     }
                 },
-                enable: function (groupName, enabled) {
-                    if(enabled===undefined)
-                    {
-                        enabled=groupName;
-                        groupName=false;
+                enable: function (enabled, groupName) {
+                    for (var key in this.bindings) {
+                        var binding = this.bindings[key];
+                        for (var prop in binding) {
+                            var vObj = binding[prop]
+                            if (groupName === undefined || vObj.group() == groupName) {
+                                vObj.disabled(!enabled);
+                            }
+                        }
                     }
-                     for (var key in this.bindings) {
-                         var binding=this.bindings[key];
-                         for(var prop in binding){
-                             var vObj=binding[prop]
-                             if (groupName===false || vObj.group == groupName) {
-                                    vObj.disabled(!enabled);
-                             }
-                         }
-                     }                    
                 }
 
             };
@@ -96,7 +91,7 @@ var _ValidObjSet = {
 
         result = comp[propertyName];
         if (!result) {
-            result = new ValidObj(propertyName,binding);
+            result = new ValidObj(propertyName, binding);
             result.binding = binding;
             result.comp = comp;
             result.$compId = $id;

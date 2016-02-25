@@ -1,70 +1,34 @@
-function getAttrVal(name, vObj) {
-    var _inner;
-    return function (val) {
-        var _name = name;
-        var _binding = vObj.binding;
-        var attr = _binding.element.attributes[_name];
-        if (val === undefined) {
-            if (attr){
-                return attr.value;}
-            return (typeof _inner==='undefined')?false:_inner;
-        }
-        else {
-            if (attr){
-                attr.value = val;}
-            _inner = val;
-        }
-        
-    }
-}
-
-function accessor(attr,defVal,type)
-{
-    var _attr=attr;
-    var _val= defVal;
+function accessor(vObj, name, defVal, type) {
+    var _name = name;
+    var _val = defVal;
     var _type = type;
-    return function(val)
-    {    
-        if(val===undefined)
-        {
-            if(_attr!=undefined)
-            {            
-                _val=_attr.value;           
-            }   
-            switch(_type){
+    var _vObj = vObj;
+
+    return function (val) {
+        var attr = _vObj.binding.element.attributes[_name];
+        if (val === undefined) {
+            if (attr) {
+                _val = attr.value;
+            }
+            switch (_type) {
                 case 'number':
                     return parseFloat(_val);
-                case 'booleam':
-                    return _val=='true';
+                case 'boolean':
+                    return _val == 'true' && attr != undefined; //当attr 使用 true、false表示数值的时候，avalon会移除attr为false的
             }
+            console.log(_name + "=" + _val + "(" + type + ")");
             return _val;
-        }           
-        else{
-             if(_attr!=undefined)
-                _attr.value=val;
-                _val=val;
         }
-    }        
-}
-
-function converTo(strValue, type, attr, vObj) {
-    switch (type) {
-        case 'number':
-            strValue = parseFloat(strValue);
-            break;
-        case 'booleam':
-            strValue = strValue.toCaseLower() === 'true';
-            break;        
-        case 'function': //如果原来的property是function，那么就是改为方法 都attr，面对的场景是val-required-error 这类型标签        
-            strValue = getAttrVal(attr.name, vObj);
-            break;
+        else {
+            if (attr)
+                attr.value = val;
+            _val = val;
+        }
     }
-    return strValue;
 }
 
-function setPropertyVal(obj, pathes, attr, vObj,value) {
+function setPropertyValByAttr(obj, pathes, vObj, attr) {
     var property = pathes.pop();
-    var val = value || attr.value;
     var curObj = obj, propName;
     while (pathes.length !== 0) {
         propName = pathes.shift();
@@ -74,10 +38,10 @@ function setPropertyVal(obj, pathes, attr, vObj,value) {
         curObj = curObj[propName];
     }
     var type = typeof curObj[property];
-    if(type=='undefined'){
-        type=typeof val;
+    if (type == 'undefined' || type == 'function' || type == 'object') {
+        type = 'string';
     }
-    curObj[property] = accessor(attr,value,type);
+    curObj[property] = accessor(vObj, attr.name, attr.value, type);
     //avalon.log('debug', property, '=', curObj[property]);
 }
 
@@ -97,23 +61,39 @@ var validatorFactory = {
                 //如果不是验证器，那么就是vobj的属性
                 //avalon.log('warn', 'can't find', validatorName, ' defined. so add it to vali')
                 aryNames = [validatorName].concat(aryNames);
-                setPropertyVal(vobj, aryNames, attr, vobj); //set验证对象
+                var val = vobj[validatorName];
+                var type = typeof val;
+                if (type == 'function') {
+                    val = val.call(vobj);
+                    type = typeof val;
+                }
+                console.log('set the vobject property ' + validatorName + ',val=' + val + ",type=" + type);
+                vobj[validatorName] = accessor(vobj, attr.name, val, type);
                 continue;
             }
 
             var validator = result[validatorName];
             if (!validator) {
-                validator = new Validator();// this._creatorValidator(validatorCreator, aryNames, attr);
+                validator = new Validator();// this._creatorValidator(validatorCreator, aryNames, attr);                
                 avalon.mix(validator, validatorCreator())
                 result[validatorName] = validator;
                 validator.vObj = vobj;
-                validator.init(binding, vobj);
-            }              
-            //validator.attrs[aryNames.pop()] = attr;
-            setPropertyVal(validator, aryNames, attr, vobj);
+            }
+            if (aryNames.length != 0) {
+                setPropertyValByAttr(validator, aryNames, vobj, attr);
+            }
         }
         for (var key in result) {
-            result[key].inited(binding, vobj);
+            var validator = result[key];
+            //把validator的属性变为方法。
+            //经过上面的初始化，凡是attribute有定义的属性，应该都变为方法获取和设置，剩下的应该就是普通的属性。
+            for (var name in validator) {
+                var typeOrProp = typeof validator[name]
+                if (typeOrProp != 'function' && typeOrProp != 'object') { //把普通属性的变为方法获取                   
+                    validator[name] = accessor(vobj, name, validator[name], typeOrProp)
+                }
+            }
+            validator.inited(binding, vobj);
         }
         return result;
     }

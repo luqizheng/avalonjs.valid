@@ -85,7 +85,7 @@
             Fax:"",
             Phone:"",
             enable:function(groupName){
-               vam.$val.enable(groupName,this.checked);
+               vam.$val.enable(this.checked,groupName);
             },            
             submit:function(){
                 vam.$val.valid(function(isValid){

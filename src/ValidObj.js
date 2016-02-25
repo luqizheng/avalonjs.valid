@@ -2,7 +2,7 @@
 /// <reference path='Validator.js' />
 /// <reference path='../lib/avalon.js' /> 
 function ValidObj(name, binding) {
-    
+
     this.validating = false;//中间状态，验证ing，    
     this.success = '';
     this.$compId = '';
@@ -10,19 +10,33 @@ function ValidObj(name, binding) {
     this.validators = [];
     this.classBindings = [];//bidng of class.
     this.displayBindings = [];//bind of display   
-    this.binding = binding; //binding of avalon. ms-val="XX"     
-    this.disabled = getAttrVal('val-disabled', this);
-    this.group = getAttrVal('val-group', this);
+    this.binding = binding; //binding of avalon. ms-val="XX"
+    this._disabled = false;
+    this.disabled = function (val) {
+        if (val === undefined) {
+            return this._disabled;
+        }
+        else {
+            this._disabled = val;
+        }
+
+    }
+    this._group = '';
+    this.group = function (val) {
+        if (val !== undefined) {
+            this._group = val;
+        } else { return this._group; }
+    }
     this._isFirstVal = true; //是否为第一次验证，如果是，无论值是否相同都要执行。
     this.output = function () {
         //已经知道结果了。
         var self = this;
         var isPass = this.isPass();
         avalon.each(self.classBindings, function (i, binding) {
-            var $ele=avalon(binding.element)
+            var $ele = avalon(binding.element)
             var properName = getPropName(binding);
-            var showOrNot = properName === 'success' ? isPass : !isPass;            
-            $ele.toggleClass(binding.clz, showOrNot);            
+            var showOrNot = properName === 'success' ? isPass : !isPass;
+            $ele.toggleClass(binding.clz, showOrNot);
         });       
         //output 信息        
         avalon.each(self.displayBindings, function (i, binding) {
@@ -68,9 +82,9 @@ function ValidObj(name, binding) {
 
     this.valid = function (newValue, callback) {
 
-        function cal_cb() {
+        function cal_cb(msgs) {
             if (avalon.isFunction(callback)) {
-                callback.call(self, self.isPass());
+                callback.call(self, self.isPass(), msgs);
             }
         }
 
@@ -87,7 +101,7 @@ function ValidObj(name, binding) {
         if (this.isSameValue(newValue)) { //没有enable，那么直接验证就可以了。
             //newValue没有输入，那么检查binding是否带有getter，如果有证明值已经更改过但是还没有获取到
             //那么不需要检查.直接将上一次的结果返回就可以了。
-            cal_cb();
+            cal_cb(null);
             return;
         }
 
@@ -100,11 +114,13 @@ function ValidObj(name, binding) {
             queue.push(self.validators[key]);
         }
 
-        queue.push(function () {
+        queue.push(function (errorMessage) {
             self.validating = false;
             self.output();
-            cal_cb();
+            cal_cb(errorMessage);
         });
+
+        
 
         function _validQueue() {
             self.validating = true;
@@ -117,9 +133,10 @@ function ValidObj(name, binding) {
                     else {
                         var msg = validator.error();
                         self.error = formatMessage(msg, validator, self);
-                        queue.pop()();
+                        
+                        queue.pop()( self.error);
                     }
-                });
+                },self);
             }
             else {
                 validator(); //最后全部成功那么就输出成功的信息。

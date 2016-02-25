@@ -21,6 +21,7 @@
     "rimraf": "2.2.8"
   },
   "devDependencies": {
+    "del": "^2.2.0",
     "gulp-file-copy": "0.0.1",
     "gulp-file-insert": "^1.0.2",
     "gulp-jshint": "^2.0.0",
