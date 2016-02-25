@@ -6,19 +6,19 @@
     
 var initHandler = {
     'class': function (binding) {
-        try{
-        //binding.type = 'class'//强制改为class;            
-        var ary = binding.expr.split(':');
-        if (ary.length < 2) {
-            avalon.log('error', binding.expr + '必须是', binding.expr, '="className:bindName 这种格式');
-            //throw new Exception(binding.expr + ' 必须是 className:bindgName');
+        try {
+            //binding.type = 'class'//强制改为class;            
+            var ary = binding.expr.split(':');
+            if (ary.length < 2) {
+                avalon.log('error', binding.expr + '必须是', binding.expr, '="className:bindName ');
+                //throw new Exception(binding.expr + ' 必须是 className:bindgName');
+            }
+            var newValue = ary[1]; //ary[1] + ':' + const_prop + '.' + ary[0] + '.' + info.param;            
+            binding.expr = newValue;
+            binding.clz = ary[0];
+            binding.oneTime = true;
         }
-        var newValue = ary[1]; //ary[1] + ':' + const_prop + '.' + ary[0] + '.' + info.param;            
-        binding.expr = newValue;        
-        binding.clz = ary[0];
-        binding.oneTime = true;
-        }
-        catch(e){
+        catch (e) {
             console.log(e);
         }
     }
@@ -47,27 +47,26 @@ avalon.directive(const_type, {
         } else if (basicType === basic_tag.display) {
             binding.oneTime = true;
         } else if (basicType === basic_tag.val) {
-            var elem = binding.element,
+            var elem = avalon(binding.element),
                 bCheck = function () {
                     //updateHandler.validator.call(binding, this.value, info);
                     //var val = binding.getter ? binding.getter.apply(0, binding.args) : binding.oldValue;
                     var vObj = _ValidObjSet.getValidObj(binding);
                     vObj.valid();
-                };
-            avalon(elem).bind('blur', bCheck);
+                };                
+            elem.bind('blur', bCheck);
             binding.rollback = function () {
-                avalon(elem).unbind('blur', bCheck);
+                elem.unbind('blur', bCheck);
             };
         }
     },
-    update: function (newValue, oldValue) {        
+    update: function (newValue, oldValue) {
         var binding = this;
         var vObj = _ValidObjSet.getValidObj(binding);
         if (oldValue === undefined) {
             var basicType = getTagType(binding.name);
             if (basicType === basic_tag.val) {
-                vObj.validators = validatorFactory.create(binding, vObj);
-                vObj.binding = this;
+                vObj.validators = validatorFactory.create(binding, vObj);                
                 return;
             }
             else if (basicType === basic_tag.class) {
@@ -83,7 +82,7 @@ avalon.directive(const_type, {
         }
         vObj.valid(newValue);
         vObj.notify();
-        this.$vObj=vObj;
+        this.$vObj = vObj;
     }
 });
 

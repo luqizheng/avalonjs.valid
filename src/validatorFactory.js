@@ -16,7 +16,7 @@ function accessor(vObj, name, defVal, type) {
                 case 'boolean':
                     return _val == 'true' && attr != undefined; //当attr 使用 true、false表示数值的时候，avalon会移除attr为false的
             }
-            console.log(_name + "=" + _val + "(" + type + ")");
+            //console.log(_name + "=" + _val + "(" + type + ")");
             return _val;
         }
         else {
@@ -67,7 +67,7 @@ var validatorFactory = {
                     val = val.call(vobj);
                     type = typeof val;
                 }
-                console.log('set the vobject property ' + validatorName + ',val=' + val + ",type=" + type);
+                //console.log('set the vobject property ' + validatorName + ',val=' + val + ",type=" + type);
                 vobj[validatorName] = accessor(vobj, attr.name, val, type);
                 continue;
             }
