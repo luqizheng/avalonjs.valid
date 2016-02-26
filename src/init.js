@@ -59,11 +59,11 @@ var _ValidObjSet = {
                                 vObj.valid(undefined, function (isPass, msg) {
                                     summary = summary && isPass;
                                     if (!isPass) {
-                                        errorMessage.push({msg:msg,vObj:vObj.name});
+                                        errorMessage.push({ msg: msg, vObj: vObj.name });
                                     }
                                     validResult._len--;
                                     if (validResult._len == 0 && callback) {
-                                        callback(summary,errorMessage);
+                                        callback(summary, errorMessage);
                                     }
                                 });
                             }
@@ -80,8 +80,16 @@ var _ValidObjSet = {
                             }
                         }
                     }
+                },
+                reset: function () {
+                    for (var key in this.bindings) {
+                        var binding = this.bindings[key];
+                        for (var prop in binding) {
+                            var vObj = binding[prop]
+                            vObj.reset();
+                        }
+                    }
                 }
-
             };
         }
         var comp = vm$val.bindings[$id];

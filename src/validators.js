@@ -169,7 +169,7 @@ avalon[const_type] = {
             data: function (ele) {
                 var result = {};
                 for (var i = 0; i < ele.attributes.length; i++) {
-                    var attr = binding.element.attributes[i];
+                    var attr = this.vObj.binding.element.attributes[i];
                     if (/val-ajax-data-.+/i.test(attr.name)) {
                         var pathes = attr.name.substr('val-ajax-data-'.length).split('-');
                         var lastProp = pathes.pop();
@@ -185,6 +185,7 @@ avalon[const_type] = {
                         curObj[lastProp] = attr.value;
                     }
                 }
+                return result;
             },
             func: function (val, cb, vobj) {
                 var obj = this.data(vobj.binding.element);

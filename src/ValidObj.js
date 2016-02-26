@@ -77,6 +77,9 @@ function ValidObj(name, binding) {
         if (newValue === undefined) {
             newValue = binding.getter.apply(0, binding.args);
         }
+        if(newValue.length !== undefined){
+            return false;
+        }
         return newValue && newValue === binding.oldValue; //如果新值为空，那么就需要验证其验证。否则跳过。         
     };
 
@@ -120,7 +123,7 @@ function ValidObj(name, binding) {
             cal_cb(errorMessage);
         });
 
-        
+
 
         function _validQueue() {
             self.validating = true;
@@ -133,10 +136,10 @@ function ValidObj(name, binding) {
                     else {
                         var msg = validator.error();
                         self.error = formatMessage(msg, validator, self);
-                        
-                        queue.pop()( self.error);
+
+                        queue.pop()(self.error);
                     }
-                },self);
+                }, self);
             }
             else {
                 validator(); //最后全部成功那么就输出成功的信息。

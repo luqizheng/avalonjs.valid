@@ -68,12 +68,12 @@ var validatorFactory = {
                     type = typeof val;
                 }
                 //console.log('set the vobject property ' + validatorName + ',val=' + val + ",type=" + type);
-                vobj[validatorName] = accessor(vobj, attr.name, val, type);
+                vobj[validatorName] = accessor(vobj, attr.name, attr.value, type);
                 continue;
             }
 
             var validator = result[validatorName];
-            if (!validator) {
+            if (!validator) { 
                 validator = new Validator();// this._creatorValidator(validatorCreator, aryNames, attr);                
                 avalon.mix(validator, validatorCreator())
                 result[validatorName] = validator;

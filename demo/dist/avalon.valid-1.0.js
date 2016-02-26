@@ -98,11 +98,11 @@ var _ValidObjSet = {
                                 vObj.valid(undefined, function (isPass, msg) {
                                     summary = summary && isPass;
                                     if (!isPass) {
-                                        errorMessage.push({msg:msg,vObj:vObj.name});
+                                        errorMessage.push({ msg: msg, vObj: vObj.name });
                                     }
                                     validResult._len--;
                                     if (validResult._len == 0 && callback) {
-                                        callback(summary,errorMessage);
+                                        callback(summary, errorMessage);
                                     }
                                 });
                             }
@@ -119,8 +119,16 @@ var _ValidObjSet = {
                             }
                         }
                     }
+                },
+                reset: function () {
+                    for (var key in this.bindings) {
+                        var binding = this.bindings[key];
+                        for (var prop in binding) {
+                            var vObj = binding[prop]
+                            vObj.reset();
+                        }
+                    }
                 }
-
             };
         }
         var comp = vm$val.bindings[$id];
@@ -232,6 +240,9 @@ function ValidObj(name, binding) {
         if (newValue === undefined) {
             newValue = binding.getter.apply(0, binding.args);
         }
+        if(newValue.length !== undefined){
+            return false;
+        }
         return newValue && newValue === binding.oldValue; //如果新值为空，那么就需要验证其验证。否则跳过。         
     };
 
@@ -275,7 +286,7 @@ function ValidObj(name, binding) {
             cal_cb(errorMessage);
         });
 
-        
+
 
         function _validQueue() {
             self.validating = true;
@@ -288,10 +299,10 @@ function ValidObj(name, binding) {
                     else {
                         var msg = validator.error();
                         self.error = formatMessage(msg, validator, self);
-                        
-                        queue.pop()( self.error);
+
+                        queue.pop()(self.error);
                     }
-                },self);
+                }, self);
             }
             else {
                 validator(); //最后全部成功那么就输出成功的信息。
@@ -419,12 +430,12 @@ var validatorFactory = {
                     type = typeof val;
                 }
                 //console.log('set the vobject property ' + validatorName + ',val=' + val + ",type=" + type);
-                vobj[validatorName] = accessor(vobj, attr.name, val, type);
+                vobj[validatorName] = accessor(vobj, attr.name, attr.value, type);
                 continue;
             }
 
             var validator = result[validatorName];
-            if (!validator) {
+            if (!validator) { 
                 validator = new Validator();// this._creatorValidator(validatorCreator, aryNames, attr);                
                 avalon.mix(validator, validatorCreator())
                 result[validatorName] = validator;
@@ -527,7 +538,8 @@ avalon.directive(const_type, {
         if (oldValue === undefined) {
             var basicType = getTagType(binding.name);
             if (basicType === basic_tag.val) {
-                vObj.validators = validatorFactory.create(binding, vObj);                
+                vObj.validators = validatorFactory.create(binding, vObj);       
+                vObj.binding=binding;//要重新设置一次。因为有可能class、display提前就生成了这个对象。         
                 return;
             }
             else if (basicType === basic_tag.class) {
@@ -723,7 +735,7 @@ avalon[const_type] = {
             data: function (ele) {
                 var result = {};
                 for (var i = 0; i < ele.attributes.length; i++) {
-                    var attr = binding.element.attributes[i];
+                    var attr = this.vObj.binding.element.attributes[i];
                     if (/val-ajax-data-.+/i.test(attr.name)) {
                         var pathes = attr.name.substr('val-ajax-data-'.length).split('-');
                         var lastProp = pathes.pop();
@@ -739,6 +751,7 @@ avalon[const_type] = {
                         curObj[lastProp] = attr.value;
                     }
                 }
+                return result;
             },
             func: function (val, cb, vobj) {
                 var obj = this.data(vobj.binding.element);

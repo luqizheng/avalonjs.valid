@@ -66,7 +66,8 @@ avalon.directive(const_type, {
         if (oldValue === undefined) {
             var basicType = getTagType(binding.name);
             if (basicType === basic_tag.val) {
-                vObj.validators = validatorFactory.create(binding, vObj);                
+                vObj.validators = validatorFactory.create(binding, vObj);       
+                vObj.binding=binding;//要重新设置一次。因为有可能class、display提前就生成了这个对象。         
                 return;
             }
             else if (basicType === basic_tag.class) {
